@@ -1,0 +1,357 @@
+# CHICAGO SYSTEMS - ENTERPRISE ROLEPLAY BOT
+
+Desarrolla un bot profesional para Discord llamado "Chicago Systems", utilizando Node.js, TypeScript, Discord.js v14, PostgreSQL y Prisma/Drizzle ORM.
+
+El bot debe ser un sistema central para comunidades de roleplay y gestión institucional. No debe incluir MDT, CAD, despacho policial ni sistemas de llamadas 911.
+
+## Objetivo
+
+Crear un proyecto completo, listo para producción, modular, escalable y mantenible para servidores de 5.000 a 20.000 usuarios.
+
+RESTRICCIÓN ABSOLUTA: SIN INTERFAZ WEB
+
+El proyecto NO debe incluir ningún tipo de interfaz web.
+
+NO utilizar:
+
+* React
+* Next.js
+* Vue
+* Angular
+* Express Dashboard
+* Panel Web
+* API pública para usuarios
+* Frontend
+* Sitio web administrativo
+* Dashboard HTML
+* Dashboard de estadísticas web
+* Login web
+* Portal web
+
+Toda la administración debe realizarse exclusivamente desde Discord mediante:
+
+* Slash Commands
+* Botones
+* Select Menus
+* Modales
+* Embeds
+* Hilos automáticos
+* Menús interactivos
+
+Los administradores deben poder configurar el sistema completo desde Discord sin editar archivos manualmente.
+
+Todas las configuraciones deben almacenarse en PostgreSQL y modificarse mediante comandos administrativos.
+
+Ejemplos:
+
+✓ Correcto:
+
+* /config economia
+* /config marketplace
+* /config impuestos
+* /config departamentos
+* Paneles con botones
+* Select Menus
+* Modales
+
+✗ Incorrecto:
+
+* https://dashboard.chicagosystems.com
+* Panel administrativo web
+* Página de estadísticas
+* Configuración mediante navegador
+* Login mediante navegador
+
+Chicago Systems debe funcionar como una aplicación 100% nativa de Discord, sin depender de ningún sitio web para operar o administrarse.
+
+## Tecnologías
+
+* Node.js 24+
+* TypeScript
+* Discord.js v14
+* PostgreSQL
+* Prisma o Drizzle ORM
+* Winston
+* node-cron
+* Zod
+* dotenv
+* pnpm workspaces
+
+## Estructura
+
+Crear arquitectura enterprise:
+
+src/
+├── bot/
+├── commands/
+├── events/
+├── handlers/
+├── services/
+├── repositories/
+├── modules/
+├── middleware/
+├── jobs/
+├── utils/
+├── config/
+├── types/
+├── database/
+└── tests/
+
+## Módulos Obligatorios
+
+### Verificación
+
+* Paneles
+* Botones
+* Modales
+* Anti-alt
+* Autoroles
+* Historial
+
+### Gestión de Roles
+
+* Autoroles
+* Roles temporales
+* Roles por actividad
+* Roles por economía
+* Roles por departamento
+
+### Economía
+
+* Efectivo
+* Banco
+* Historial financiero
+* Daily
+* Weekly
+* Trabajos
+
+### Inventario
+
+* Objetos
+* Categorías
+* Rarezas
+* Transferencias
+* Consumo
+
+### Marketplace
+
+* Venta de objetos
+* Ofertas
+* Subastas
+* Hilos automáticos
+* Publicaciones automáticas
+* Mención de roles configurables
+* Historial de ventas
+* Valoración de usuarios
+
+### Empresas
+
+* Contratación
+* Despidos
+* Nómina
+* Fondos empresariales
+* Inventario empresarial
+
+### Propiedades
+
+* Casas
+* Apartamentos
+* Locales
+* Garajes
+* Bodegas
+* Compra
+* Venta
+* Alquiler
+
+### Departamentos Gubernamentales
+
+Crear departamentos configurables:
+
+* CPD
+* CFD
+* Cook County Sheriff's Office
+* Illinois State Police
+* DOT
+* DOJ
+* EMA
+
+Cada departamento debe tener:
+
+* Presupuesto propio
+* Inventario propio
+* Flotas
+* Historial financiero
+* Auditorías
+
+### Sistema de Flotas
+
+NO comprar vehículos individuales por defecto.
+
+Implementar:
+
+* Flotas de patrullaje
+* Flotas EMS
+* Flotas administrativas
+* Flotas de transporte
+* Flotas tácticas
+
+Ejemplo:
+
+CPD
+Flota Urbana
+
+8 Ford Explorer
+2 Dodge Charger
+
+Costo:
+$500,000
+
+Las compras descuentan fondos del departamento.
+
+Registrar auditoría completa.
+
+Permitir compras especiales individuales:
+
+* Helicópteros
+* Vehículos SWAT
+* Vehículos de mando
+
+### Banco
+
+* Depósitos
+* Retiros
+* Transferencias
+* Ahorros
+* Inversiones
+* Préstamos
+
+### Inversiones
+
+Implementar:
+
+* Conservadora
+* Moderada
+* Agresiva
+
+Con:
+
+* Fecha de creación
+* Fecha de madurez
+* Rendimiento
+* Riesgo
+
+Cron jobs para vencimientos automáticos.
+
+### Mercado Negro
+
+* Stock dinámico
+* Rotación automática
+* Precios variables
+* Eventos especiales
+
+### Impuestos
+
+* Comercial
+* Empresarial
+* Propiedades
+* Departamental
+
+### Tesoro Público
+
+Cuenta gubernamental central.
+
+Funciones:
+
+* Financiar departamentos
+* Otorgar subsidios
+* Financiar eventos
+
+### Contratos
+
+* Públicos
+* Privados
+* Recompensas
+* Historial
+
+### Aplicaciones
+
+* CPD
+* CFD
+* Sheriff's Office
+* DOT
+* Staff
+
+### Tickets
+
+* Categorías
+* Logs
+* Transcripciones
+
+### Reputación
+
+* Positiva
+* Negativa
+* Rangos
+
+### Niveles
+
+* XP
+* Leaderboards
+* Recompensas
+
+## Dashboard Administrativo dentro de Discord
+
+Implementar paneles interactivos mediante:
+
+* Buttons
+* Select Menus
+* Modals
+
+Sin interfaz web.
+
+## Logs
+
+Registrar:
+
+* Economía
+* Compras
+* Marketplace
+* Empresas
+* Propiedades
+* Departamentos
+* Banco
+* Mercado Negro
+* Aplicaciones
+* Tickets
+* Roles
+
+## Seguridad
+
+* Anti-spam
+* Anti-exploit
+* Cooldowns
+* Auditorías
+* Rate limiting
+* Protección contra duplicación
+
+## Base de Datos
+
+Diseñar esquema completo con más de 30 tablas relacionadas.
+
+Usar migraciones.
+
+## Calidad
+
+Generar:
+
+* Código comentado
+* Tipado estricto
+* Manejo de errores
+* Servicios desacoplados
+* Repository Pattern
+* Dependency Injection
+* Tests básicos
+
+## Resultado Esperado
+
+Entregar proyecto completo funcional, listo para ejecutarse en Replit, Railway, Koyeb, Oracle Cloud o VPS Linux, con todos los comandos registrados automáticamente y documentación técnica incluida.

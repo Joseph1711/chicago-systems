@@ -1,0 +1,3 @@
+- [Winston logger API](winston-logger.md) — winston takes (message, meta) not (meta, message) like pino; structured calls must be reversed.
+- [Discord.js v14 subcommand permissions](discordjs-subcommand-quirks.md) — setDefaultMemberPermissions only valid on top-level SlashCommandBuilder, not subcommand builders.
+- [DB lib rebuild needed](db-lib-rebuild.md) — after adding new schema files, must run typecheck:libs before bot typecheck or @workspace/db exports appear missing.
