@@ -1,7 +1,7 @@
 import { createServer } from "http";
 import { Client } from "discord.js";
 
-export function startKeepAlive(client: Client, port = 8080): void {
+export function startKeepAlive(client: Client, port = Number(process.env.PORT) || 8080): void {
   const server = createServer((req, res) => {
     const isOnline = client.isReady();
     const tag = client.user?.tag ?? "Chicago Systems";
@@ -161,7 +161,7 @@ export function startKeepAlive(client: Client, port = 8080): void {
     res.end(html);
   });
 
-  server.listen(port, () => {
+  server.listen(port, "0.0.0.0", () => {
     console.info(`[keep-alive] Status page running on port ${port}`);
   });
 }
