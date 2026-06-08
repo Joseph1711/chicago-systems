@@ -6,6 +6,7 @@ import { loadCommands } from "./handlers/commandHandler.js";
 import { registerReadyEvent } from "./events/ready.js";
 import { registerInteractionCreate } from "./events/interactionCreate.js";
 import { registerMessageCreate } from "./events/messageCreate.js";
+import { startKeepAlive } from "./utils/keepAlive.js";
 
 const client = new Client({
   intents: [
@@ -26,6 +27,8 @@ async function main() {
   registerReadyEvent(client);
   registerInteractionCreate(client);
   registerMessageCreate(client);
+
+  startKeepAlive(client, 8080);
 
   await client.login(config.DISCORD_TOKEN);
 }
