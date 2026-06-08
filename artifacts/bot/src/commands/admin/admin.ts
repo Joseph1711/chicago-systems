@@ -76,6 +76,18 @@ const command: Command = {
         .addSubcommand((s) => s.setName("canal-mercado").setDescription("Establecer canal de mercado").addChannelOption((o) => o.setName("canal").setDescription("Canal").setRequired(true)))
         .addSubcommand((s) => s.setName("rol-admin").setDescription("Establecer rol de administrador").addRoleOption((o) => o.setName("rol").setDescription("Rol").setRequired(true)))
         .addSubcommand((s) => s.setName("ver").setDescription("Ver configuración actual"))
+    )
+    .addSubcommandGroup((g) =>
+      g.setName("verificacion").setDescription("Configurar el sistema de verificación")
+        .addSubcommand((s) =>
+          s.setName("setup").setDescription("Habilitar y configurar la verificación")
+            .addRoleOption((o) => o.setName("rol-verificado").setDescription("Rol que se asigna al verificarse").setRequired(true))
+            .addRoleOption((o) => o.setName("rol-no-verificado").setDescription("Rol que se quita al verificarse").setRequired(false))
+            .addChannelOption((o) => o.setName("canal-logs").setDescription("Canal donde se registran las verificaciones").setRequired(false))
+            .addIntegerOption((o) => o.setName("dias-minimos").setDescription("Días mínimos de antigüedad de la cuenta (anti-alts)").setRequired(false).setMinValue(0).setMaxValue(365))
+        )
+        .addSubcommand((s) => s.setName("deshabilitar").setDescription("Deshabilitar el sistema de verificación"))
+        .addSubcommand((s) => s.setName("ver").setDescription("Ver configuración actual de verificación"))
     ),
   cooldown: 2,
   async execute(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -207,6 +219,77 @@ const command: Command = {
           emoji,
         });
         await interaction.reply({ embeds: [successEmbed("Propiedad Creada", `${emoji} **${name}** creada por **${formatCurrency(price)}**.`)] });
+      }
+
+    } else if (group === "verificacion") {
+      const guildId = interaction.guildId!;
+
+      if (sub === "setup") {
+        const verifiedRole = interaction.options.getRole("rol-verificado", true);
+        const unverifiedRole = interaction.options.getRole("rol-no-verificado");
+        const logChannel = interaction.options.getChannel("canal-logs");
+        const minDays = interaction.options.getInteger("dias-minimos") ?? 7;
+
+        const [existing] = await db.select().from(verificationConfigTable)
+          .where(eq(verificationConfigTable.guildId, guildId)).limit(1);
+
+        if (existing) {
+          await db.update(verificationConfigTable).set({
+            isEnabled: true,
+            verifiedRoleId: verifiedRole.id,
+            unverifiedRoleId: unverifiedRole?.id ?? null,
+            logChannelId: logChannel?.id ?? null,
+            antiAltDays: minDays,
+          }).where(eq(verificationConfigTable.guildId, guildId));
+        } else {
+          await db.insert(verificationConfigTable).values({
+            id: generateId(),
+            guildId,
+            isEnabled: true,
+            verifiedRoleId: verifiedRole.id,
+            unverifiedRoleId: unverifiedRole?.id ?? null,
+            logChannelId: logChannel?.id ?? null,
+            antiAltDays: minDays,
+          });
+        }
+
+        const embed = new EmbedBuilder()
+          .setColor(Colors.Success)
+          .setTitle("✅ Verificación Habilitada")
+          .addFields(
+            { name: "Rol verificado", value: `${verifiedRole}`, inline: true },
+            { name: "Rol no verificado", value: unverifiedRole ? `${unverifiedRole}` : "No configurado", inline: true },
+            { name: "Canal de logs", value: logChannel ? `${logChannel}` : "No configurado", inline: true },
+            { name: "Días mínimos de cuenta", value: `${minDays} días`, inline: true },
+          )
+          .setDescription("Ahora usa `/verificar panel` en el canal donde quieras publicar el panel de verificación.")
+          .setTimestamp();
+
+        await interaction.reply({ embeds: [embed] });
+
+      } else if (sub === "deshabilitar") {
+        await db.update(verificationConfigTable)
+          .set({ isEnabled: false })
+          .where(eq(verificationConfigTable.guildId, guildId));
+        await interaction.reply({ embeds: [successEmbed("Verificación Deshabilitada", "El sistema de verificación ha sido deshabilitado.")] });
+
+      } else if (sub === "ver") {
+        const [cfg] = await db.select().from(verificationConfigTable)
+          .where(eq(verificationConfigTable.guildId, guildId)).limit(1);
+
+        const embed = new EmbedBuilder()
+          .setColor(cfg?.isEnabled ? Colors.Success : Colors.Error)
+          .setTitle("🔐 Configuración de Verificación")
+          .addFields(
+            { name: "Estado", value: cfg?.isEnabled ? "✅ Habilitada" : "❌ Deshabilitada", inline: true },
+            { name: "Rol verificado", value: cfg?.verifiedRoleId ? `<@&${cfg.verifiedRoleId}>` : "No configurado", inline: true },
+            { name: "Rol no verificado", value: cfg?.unverifiedRoleId ? `<@&${cfg.unverifiedRoleId}>` : "No configurado", inline: true },
+            { name: "Canal de logs", value: cfg?.logChannelId ? `<#${cfg.logChannelId}>` : "No configurado", inline: true },
+            { name: "Días mínimos", value: `${cfg?.antiAltDays ?? 7} días`, inline: true },
+          )
+          .setTimestamp();
+
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
       }
 
     } else if (group === "configuracion") {
