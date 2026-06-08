@@ -9,6 +9,7 @@ import {
   TextInputBuilder,
   TextInputStyle,
   PermissionFlagsBits,
+  MessageFlags,
 } from "discord.js";
 import { Command } from "../../types/index.js";
 import { db } from "@workspace/db";
@@ -57,7 +58,7 @@ for (const type of Object.keys(APP_QUESTIONS)) {
       .where(and(eq(applicationsTable.guildId, guildId), eq(applicationsTable.userId, interaction.user.id), eq(applicationsTable.type, type), eq(applicationsTable.status, "pending")));
 
     if (existingPending.length > 0) {
-      await interaction.reply({ embeds: [errorEmbed("Ya Aplicaste", `Ya tienes una solicitud pendiente para ${type.toUpperCase()}.`)], ephemeral: true });
+      await interaction.reply({ embeds: [errorEmbed("Ya Aplicaste", `Ya tienes una solicitud pendiente para ${type.toUpperCase()}.`)], flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -94,7 +95,7 @@ for (const type of Object.keys(APP_QUESTIONS)) {
       }
     }
 
-    await interaction.reply({ embeds: [successEmbed("Solicitud Enviada", `¡Tu solicitud para **${type.toUpperCase()}** ha sido enviada y está en revisión!`)], ephemeral: true });
+    await interaction.reply({ embeds: [successEmbed("Solicitud Enviada", `¡Tu solicitud para **${type.toUpperCase()}** ha sido enviada y está en revisión!`)], flags: MessageFlags.Ephemeral });
   });
 }
 
@@ -102,7 +103,7 @@ registerButton("app_approve", async (interaction) => {
   const appId = interaction.customId.split(":")[1]!;
   const [app] = await db.select().from(applicationsTable).where(eq(applicationsTable.id, appId)).limit(1);
   if (!app) {
-    await interaction.reply({ embeds: [errorEmbed("No Encontrado", "Solicitud no encontrada.")], ephemeral: true });
+    await interaction.reply({ embeds: [errorEmbed("No Encontrado", "Solicitud no encontrada.")], flags: MessageFlags.Ephemeral });
     return;
   }
   await db.update(applicationsTable).set({ status: "approved", reviewedBy: interaction.user.id, reviewedAt: new Date() }).where(eq(applicationsTable.id, appId));
@@ -117,7 +118,7 @@ registerButton("app_deny", async (interaction) => {
   const appId = interaction.customId.split(":")[1]!;
   const [app] = await db.select().from(applicationsTable).where(eq(applicationsTable.id, appId)).limit(1);
   if (!app) {
-    await interaction.reply({ embeds: [errorEmbed("No Encontrado", "Solicitud no encontrada.")], ephemeral: true });
+    await interaction.reply({ embeds: [errorEmbed("No Encontrado", "Solicitud no encontrada.")], flags: MessageFlags.Ephemeral });
     return;
   }
   await db.update(applicationsTable).set({ status: "denied", reviewedBy: interaction.user.id, reviewedAt: new Date() }).where(eq(applicationsTable.id, appId));
@@ -156,7 +157,7 @@ const command: Command = {
       new ButtonBuilder().setCustomId(`apply_${type}`).setLabel("Iniciar Solicitud").setEmoji("📋").setStyle(ButtonStyle.Primary),
     );
 
-    await interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
+    await interaction.reply({ embeds: [embed], components: [row], flags: MessageFlags.Ephemeral });
   },
 };
 

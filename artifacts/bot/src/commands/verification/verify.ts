@@ -9,6 +9,7 @@ import {
   TextInputBuilder,
   TextInputStyle,
   PermissionFlagsBits,
+  MessageFlags,
 } from "discord.js";
 import { Command } from "../../types/index.js";
 import { db } from "@workspace/db";
@@ -44,14 +45,14 @@ registerModal("verify_modal", async (interaction) => {
     .where(eq(verificationConfigTable.guildId, guildId)).limit(1);
 
   if (!config?.isEnabled) {
-    await interaction.reply({ embeds: [errorEmbed("No Habilitado", "La verificación no está habilitada en este servidor.")], ephemeral: true });
+    await interaction.reply({ embeds: [errorEmbed("No Habilitado", "La verificación no está habilitada en este servidor.")], flags: MessageFlags.Ephemeral });
     return;
   }
 
   const guild = interaction.guild!;
   const member = await guild.members.fetch(interaction.user.id).catch(() => null);
   if (!member) {
-    await interaction.reply({ embeds: [errorEmbed("Error", "No se pudo encontrar tu membresía.")], ephemeral: true });
+    await interaction.reply({ embeds: [errorEmbed("Error", "No se pudo encontrar tu membresía.")], flags: MessageFlags.Ephemeral });
     return;
   }
 
@@ -59,7 +60,7 @@ registerModal("verify_modal", async (interaction) => {
   if (accountAgeDays < (config.antiAltDays ?? 7)) {
     await interaction.reply({
       embeds: [errorEmbed("Cuenta Muy Nueva", `Tu cuenta debe tener al menos **${config.antiAltDays} días** para verificarse. Tu cuenta tiene ${Math.floor(accountAgeDays)} días.`)],
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -105,7 +106,7 @@ registerModal("verify_modal", async (interaction) => {
     }
   }
 
-  await interaction.reply({ embeds: [successEmbed("¡Verificado!", "¡Bienvenido al servidor! Ya tienes acceso a todos los canales.")], ephemeral: true });
+  await interaction.reply({ embeds: [successEmbed("¡Verificado!", "¡Bienvenido al servidor! Ya tienes acceso a todos los canales.")], flags: MessageFlags.Ephemeral });
 });
 
 const command: Command = {
@@ -147,7 +148,7 @@ const command: Command = {
           .setTitle(`${user.isVerified ? "✅" : "❌"} Estado de Verificación`)
           .setDescription(`${target} está **${user.isVerified ? "verificado" : "sin verificar"}**.`)
           .setTimestamp()],
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
   },

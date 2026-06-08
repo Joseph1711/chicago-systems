@@ -6,6 +6,7 @@ import {
   ButtonBuilder,
   ButtonStyle,
   ThreadAutoArchiveDuration,
+  MessageFlags,
 } from "discord.js";
 import { Command } from "../../types/index.js";
 import { db } from "@workspace/db";
@@ -70,7 +71,7 @@ const command: Command = {
         .limit(15);
 
       if (listings.length === 0) {
-        await interaction.reply({ embeds: [errorEmbed("Mercado Vacío", "Sin listados activos. Usa `/mercado vender` para publicar un objeto.")], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Mercado Vacío", "Sin listados activos. Usa `/mercado vender` para publicar un objeto.")], flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -96,13 +97,13 @@ const command: Command = {
       const item = items.find((i) => i.name.toLowerCase() === itemName.toLowerCase());
 
       if (!item) {
-        await interaction.reply({ embeds: [errorEmbed("No Encontrado", `Objeto **${itemName}** no encontrado.`)], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("No Encontrado", `Objeto **${itemName}** no encontrado.`)], flags: MessageFlags.Ephemeral });
         return;
       }
 
       const removed = await removeItem(interaction.user.id, interaction.guildId!, item.id, qty);
       if (!removed) {
-        await interaction.reply({ embeds: [errorEmbed("Objetos Insuficientes", `No tienes ${qty}x **${item.name}** en tu inventario.`)], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Objetos Insuficientes", `No tienes ${qty}x **${item.name}** en tu inventario.`)], flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -145,7 +146,7 @@ const command: Command = {
 
       await interaction.reply({
         embeds: [successEmbed("Publicado en Venta", `Publicaste **${qty}x ${item.emoji ?? "📦"} ${item.name}** por **${formatCurrency(price)}**.\nID: \`${listingId.slice(0, 8)}\``)],
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
 
     } else if (sub === "comprar") {
@@ -156,18 +157,18 @@ const command: Command = {
       const listing = allListings.find((l) => l.id.startsWith(listingIdPrefix));
 
       if (!listing) {
-        await interaction.reply({ embeds: [errorEmbed("No Encontrado", "Listado no encontrado o ya vendido.")], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("No Encontrado", "Listado no encontrado o ya vendido.")], flags: MessageFlags.Ephemeral });
         return;
       }
       if (listing.sellerId === interaction.user.id) {
-        await interaction.reply({ embeds: [errorEmbed("Inválido", "No puedes comprar tu propio listado.")], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Inválido", "No puedes comprar tu propio listado.")], flags: MessageFlags.Ephemeral });
         return;
       }
 
       await getOrCreateUser(interaction.user.id, interaction.guildId!, interaction.user.username);
       const paid = await removeCash(interaction.user.id, interaction.guildId!, listing.price);
       if (!paid) {
-        await interaction.reply({ embeds: [errorEmbed("Fondos Insuficientes", `Necesitas **${formatCurrency(listing.price)}** para comprar esto.`)], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Fondos Insuficientes", `Necesitas **${formatCurrency(listing.price)}** para comprar esto.`)], flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -191,13 +192,13 @@ const command: Command = {
       const item = items.find((i) => i.name.toLowerCase() === itemName.toLowerCase());
 
       if (!item) {
-        await interaction.reply({ embeds: [errorEmbed("No Encontrado", `Objeto **${itemName}** no encontrado.`)], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("No Encontrado", `Objeto **${itemName}** no encontrado.`)], flags: MessageFlags.Ephemeral });
         return;
       }
 
       const removed = await removeItem(interaction.user.id, interaction.guildId!, item.id, 1);
       if (!removed) {
-        await interaction.reply({ embeds: [errorEmbed("Sin Objeto", `No tienes **${item.name}** en tu inventario.`)], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Sin Objeto", `No tienes **${item.name}** en tu inventario.`)], flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -230,15 +231,15 @@ const command: Command = {
       const auction = allAuctions.find((a) => a.id.startsWith(auctionIdPrefix));
 
       if (!auction) {
-        await interaction.reply({ embeds: [errorEmbed("No Encontrado", "Subasta no encontrada o ya finalizada.")], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("No Encontrado", "Subasta no encontrada o ya finalizada.")], flags: MessageFlags.Ephemeral });
         return;
       }
       if (auction.sellerId === interaction.user.id) {
-        await interaction.reply({ embeds: [errorEmbed("Inválido", "No puedes pujar en tu propia subasta.")], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Inválido", "No puedes pujar en tu propia subasta.")], flags: MessageFlags.Ephemeral });
         return;
       }
       if (amount <= auction.currentBid) {
-        await interaction.reply({ embeds: [errorEmbed("Oferta Muy Baja", `La oferta mínima es **${formatCurrency(auction.currentBid + 1)}**.`)], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Oferta Muy Baja", `La oferta mínima es **${formatCurrency(auction.currentBid + 1)}**.`)], flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -250,7 +251,7 @@ const command: Command = {
 
       const paid = await removeCash(interaction.user.id, interaction.guildId!, amount);
       if (!paid) {
-        await interaction.reply({ embeds: [errorEmbed("Fondos Insuficientes", `Necesitas **${formatCurrency(amount)}** en efectivo.`)], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Fondos Insuficientes", `Necesitas **${formatCurrency(amount)}** en efectivo.`)], flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -268,7 +269,7 @@ const command: Command = {
       const listing = allListings.find((l) => l.id.startsWith(listingIdPrefix));
 
       if (!listing) {
-        await interaction.reply({ embeds: [errorEmbed("No Encontrado", "Listado no encontrado o no te pertenece.")], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("No Encontrado", "Listado no encontrado o no te pertenece.")], flags: MessageFlags.Ephemeral });
         return;
       }
 

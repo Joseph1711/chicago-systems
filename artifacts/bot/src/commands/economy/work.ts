@@ -1,4 +1,5 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction } from "discord.js";
+import { SlashCommandBuilder, ChatInputCommandInteraction, MessageFlags,
+} from "discord.js";
 import { Command } from "../../types/index.js";
 import { getOrCreateUser, formatCurrency, formatTime, randomBetween } from "../../utils/helpers.js";
 import { addCash, logTransaction } from "../../services/economyService.js";
@@ -36,7 +37,7 @@ const command: Command = {
         const remaining = cooldownMs - diff;
         await interaction.reply({
           embeds: [errorEmbed("En Descanso", `Puedes trabajar de nuevo en **${formatTime(remaining)}**.`)],
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return;
       }

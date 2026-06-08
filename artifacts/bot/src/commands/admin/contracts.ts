@@ -1,4 +1,5 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, PermissionFlagsBits } from "discord.js";
+import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, PermissionFlagsBits, MessageFlags,
+} from "discord.js";
 import { Command } from "../../types/index.js";
 import { db } from "@workspace/db";
 import { contractsTable } from "@workspace/db";
@@ -36,7 +37,7 @@ const command: Command = {
         .where(and(eq(contractsTable.guildId, interaction.guildId!), eq(contractsTable.status, "open")));
 
       if (contracts.length === 0) {
-        await interaction.reply({ embeds: [errorEmbed("Sin Contratos", "No hay contratos disponibles.")], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Sin Contratos", "No hay contratos disponibles.")], flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -79,7 +80,7 @@ const command: Command = {
       const contract = all.find((c) => c.id.startsWith(contractIdPrefix));
 
       if (!contract) {
-        await interaction.reply({ embeds: [errorEmbed("No Encontrado", "Contrato no encontrado o ya tomado.")], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("No Encontrado", "Contrato no encontrado o ya tomado.")], flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -92,7 +93,7 @@ const command: Command = {
       const contract = all.find((c) => c.id.startsWith(contractIdPrefix));
 
       if (!contract || !contract.assignedTo) {
-        await interaction.reply({ embeds: [errorEmbed("No Encontrado", "Contrato no encontrado o sin asignar.")], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("No Encontrado", "Contrato no encontrado o sin asignar.")], flags: MessageFlags.Ephemeral });
         return;
       }
 

@@ -2,6 +2,7 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
   EmbedBuilder,
+  MessageFlags,
 } from "discord.js";
 import { Command } from "../../types/index.js";
 import { db } from "@workspace/db";
@@ -80,7 +81,7 @@ const command: Command = {
               )
               .setTimestamp(),
           ],
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return;
       }
@@ -129,7 +130,7 @@ const command: Command = {
       if (!item) {
         await interaction.reply({
           embeds: [errorEmbed("No encontrado", `No existe ningún objeto llamado **${nombreObj}**.`)],
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return;
       }
@@ -141,7 +142,7 @@ const command: Command = {
       if (!entry) {
         await interaction.reply({
           embeds: [errorEmbed("No disponible", `**${item.name}** no está en la tienda.`)],
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return;
       }
@@ -154,7 +155,7 @@ const command: Command = {
               `Solo quedan **${entry.stock}** unidades de ${item.emoji ?? "📦"} **${item.name}**.`
             ),
           ],
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return;
       }
@@ -171,7 +172,7 @@ const command: Command = {
               `Necesitas **${formatCurrency(totalCost)}** en efectivo para comprar ${cantidad}x **${item.name}**.`
             ),
           ],
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return;
       }
@@ -206,7 +207,7 @@ const command: Command = {
       if (!item) {
         await interaction.reply({
           embeds: [errorEmbed("No encontrado", `No existe ningún objeto llamado **${nombreObj}**.`)],
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return;
       }

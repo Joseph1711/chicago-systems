@@ -1,4 +1,5 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
+import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, MessageFlags,
+} from "discord.js";
 import { Command } from "../../types/index.js";
 import { db } from "@workspace/db";
 import { blackMarketStockTable, blackMarketTransactionsTable, itemsTable } from "@workspace/db";
@@ -46,7 +47,7 @@ const command: Command = {
             .setTitle("🕵️ Mercado Negro")
             .setDescription("El mercado está vacío por ahora. El stock rota cada 6 horas.\n\n*Vuelve más tarde...*")
             .setTimestamp()],
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return;
       }
@@ -62,7 +63,7 @@ const command: Command = {
         .setFooter({ text: "Usa /mercadonegro comprar <id> para adquirir • El stock rota cada 6 horas" })
         .setTimestamp();
 
-      await interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 
     } else if (sub === "comprar") {
       const stockIdPrefix = interaction.options.getString("id", true);
@@ -73,11 +74,11 @@ const command: Command = {
       const stock = allStock.find((s) => s.id.startsWith(stockIdPrefix));
 
       if (!stock) {
-        await interaction.reply({ embeds: [errorEmbed("No Encontrado", "Stock no encontrado o agotado.")], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("No Encontrado", "Stock no encontrado o agotado.")], flags: MessageFlags.Ephemeral });
         return;
       }
       if (stock.quantity < qty) {
-        await interaction.reply({ embeds: [errorEmbed("Stock Insuficiente", `Solo hay ${stock.quantity} disponibles.`)], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Stock Insuficiente", `Solo hay ${stock.quantity} disponibles.`)], flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -86,7 +87,7 @@ const command: Command = {
       const paid = await removeCash(interaction.user.id, interaction.guildId!, totalCost);
 
       if (!paid) {
-        await interaction.reply({ embeds: [errorEmbed("Fondos Insuficientes", `Necesitas **${formatCurrency(totalCost)}** en efectivo.`)], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Fondos Insuficientes", `Necesitas **${formatCurrency(totalCost)}** en efectivo.`)], flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -110,7 +111,7 @@ const command: Command = {
       const [item] = await db.select().from(itemsTable).where(eq(itemsTable.id, stock.itemId)).limit(1);
       await interaction.reply({
         embeds: [successEmbed("Compra Completada", `Compraste **${qty}x ${item?.emoji ?? "📦"} ${item?.name ?? "objeto"}** por **${formatCurrency(totalCost)}**. 🕵️`)],
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
   },

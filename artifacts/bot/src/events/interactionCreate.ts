@@ -1,4 +1,5 @@
-import { Client, Events, Interaction } from "discord.js";
+import { Client, Events, Interaction, MessageFlags,
+} from "discord.js";
 import { handleCommand, handleAutocomplete } from "../handlers/commandHandler.js";
 import { handleButton, handleSelectMenu, handleModal } from "../handlers/interactionHandler.js";
 import { checkRateLimit, markWarned } from "../middleware/antiSpam.js";
@@ -14,7 +15,7 @@ export function registerInteractionCreate(client: Client): void {
         if (!interaction.replied && !interaction.deferred) {
           await interaction.reply({
             embeds: [errorEmbed("Rate Limited", "You are sending requests too fast. Please slow down.")],
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           }).catch(() => null);
         }
       }

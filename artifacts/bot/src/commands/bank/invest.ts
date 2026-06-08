@@ -1,4 +1,5 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
+import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, MessageFlags,
+} from "discord.js";
 import { Command } from "../../types/index.js";
 import { getOrCreateUser, formatCurrency, generateId } from "../../utils/helpers.js";
 import { removeCash, logTransaction } from "../../services/economyService.js";
@@ -44,7 +45,7 @@ const command: Command = {
 
       const user = await getOrCreateUser(interaction.user.id, interaction.guildId!, interaction.user.username);
       if (user.cash < amount) {
-        await interaction.reply({ embeds: [errorEmbed("Fondos Insuficientes", `Necesitas **${formatCurrency(amount)}** en efectivo.`)], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Fondos Insuficientes", `Necesitas **${formatCurrency(amount)}** en efectivo.`)], flags: MessageFlags.Ephemeral });
         return;
       }
 

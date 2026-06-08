@@ -1,4 +1,5 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, PermissionFlagsBits } from "discord.js";
+import { SlashCommandBuilder, ChatInputCommandInteraction, PermissionFlagsBits, MessageFlags,
+} from "discord.js";
 import { Command } from "../../types/index.js";
 import { getOrCreateUser } from "../../utils/helpers.js";
 import { addItem, removeItem } from "../../services/inventoryService.js";
@@ -21,7 +22,7 @@ const command: Command = {
     const qty = interaction.options.getInteger("cantidad") ?? 1;
 
     if (target.id === interaction.user.id) {
-      await interaction.reply({ embeds: [errorEmbed("Inválido", "No puedes darte objetos a ti mismo.")], ephemeral: true });
+      await interaction.reply({ embeds: [errorEmbed("Inválido", "No puedes darte objetos a ti mismo.")], flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -30,13 +31,13 @@ const command: Command = {
     const item = items.find((i) => i.name.toLowerCase() === itemName.toLowerCase());
 
     if (!item) {
-      await interaction.reply({ embeds: [errorEmbed("No Encontrado", `Objeto **${itemName}** no encontrado.`)], ephemeral: true });
+      await interaction.reply({ embeds: [errorEmbed("No Encontrado", `Objeto **${itemName}** no encontrado.`)], flags: MessageFlags.Ephemeral });
       return;
     }
 
     const removed = await removeItem(interaction.user.id, interaction.guildId!, item.id, qty);
     if (!removed) {
-      await interaction.reply({ embeds: [errorEmbed("Cantidad Insuficiente", `No tienes ${qty}x **${item.name}**.`)], ephemeral: true });
+      await interaction.reply({ embeds: [errorEmbed("Cantidad Insuficiente", `No tienes ${qty}x **${item.name}**.`)], flags: MessageFlags.Ephemeral });
       return;
     }
 

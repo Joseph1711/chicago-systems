@@ -1,4 +1,5 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction } from "discord.js";
+import { SlashCommandBuilder, ChatInputCommandInteraction, MessageFlags,
+} from "discord.js";
 import { Command } from "../../types/index.js";
 import { getOrCreateUser, getOrCreateGuildConfig, formatCurrency, formatTime } from "../../utils/helpers.js";
 import { addCash, logTransaction } from "../../services/economyService.js";
@@ -25,7 +26,7 @@ const command: Command = {
         const remaining = DAILY_COOLDOWN - diff;
         await interaction.reply({
           embeds: [errorEmbed("Ya Reclamado", `Puedes volver a reclamar tu diario en **${formatTime(remaining)}**.`)],
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return;
       }

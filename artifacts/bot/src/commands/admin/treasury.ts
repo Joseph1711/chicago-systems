@@ -1,4 +1,5 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, PermissionFlagsBits } from "discord.js";
+import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, PermissionFlagsBits, MessageFlags,
+} from "discord.js";
 import { Command } from "../../types/index.js";
 import { db } from "@workspace/db";
 import { treasuryTable, departmentsTable } from "@workspace/db";
@@ -56,11 +57,11 @@ const command: Command = {
       const dept = depts.find((d) => d.acronym.toLowerCase() === deptAcronym.toLowerCase());
 
       if (!dept) {
-        await interaction.reply({ embeds: [errorEmbed("No Encontrado", `Departamento **${deptAcronym}** no encontrado.`)], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("No Encontrado", `Departamento **${deptAcronym}** no encontrado.`)], flags: MessageFlags.Ephemeral });
         return;
       }
       if (treasury.balance < amount) {
-        await interaction.reply({ embeds: [errorEmbed("Fondos Insuficientes", `El tesoro solo tiene **${formatCurrency(treasury.balance)}**.`)], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Fondos Insuficientes", `El tesoro solo tiene **${formatCurrency(treasury.balance)}**.`)], flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -75,7 +76,7 @@ const command: Command = {
       const reason = interaction.options.getString("razon", true);
 
       if (treasury.balance < amount) {
-        await interaction.reply({ embeds: [errorEmbed("Fondos Insuficientes", `El tesoro solo tiene **${formatCurrency(treasury.balance)}**.`)], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Fondos Insuficientes", `El tesoro solo tiene **${formatCurrency(treasury.balance)}**.`)], flags: MessageFlags.Ephemeral });
         return;
       }
 

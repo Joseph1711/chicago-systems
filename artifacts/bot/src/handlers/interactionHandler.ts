@@ -1,4 +1,5 @@
-import { Collection, ButtonInteraction, StringSelectMenuInteraction, ModalSubmitInteraction } from "discord.js";
+import { Collection, ButtonInteraction, StringSelectMenuInteraction, ModalSubmitInteraction, MessageFlags,
+} from "discord.js";
 import { logger } from "../utils/logger.js";
 import { errorEmbed } from "../utils/embeds.js";
 
@@ -36,7 +37,7 @@ export async function handleButton(interaction: ButtonInteraction): Promise<void
     });
     const embed = errorEmbed("Error", "Ocurrió un error al procesar este botón.");
     if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     }
   }
 }

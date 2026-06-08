@@ -3,6 +3,7 @@ import {
   ChatInputCommandInteraction,
   EmbedBuilder,
   PermissionFlagsBits,
+  MessageFlags,
 } from "discord.js";
 import { Command } from "../../types/index.js";
 import { db } from "@workspace/db";
@@ -84,7 +85,7 @@ const command: Command = {
               "Objeto no encontrado",
               `No existe ningún objeto llamado **${nombreObj}**.\nCrea el objeto primero con \`/admin items create\`.`
             )],
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
           return;
         }
@@ -138,7 +139,7 @@ const command: Command = {
         );
 
         if (!item) {
-          await interaction.reply({ embeds: [errorEmbed("No encontrado", `Objeto **${nombreObj}** no existe.`)], ephemeral: true });
+          await interaction.reply({ embeds: [errorEmbed("No encontrado", `Objeto **${nombreObj}** no existe.`)], flags: MessageFlags.Ephemeral });
           return;
         }
 
@@ -147,7 +148,7 @@ const command: Command = {
           .limit(1);
 
         if (!entry) {
-          await interaction.reply({ embeds: [errorEmbed("No está en la tienda", `**${item.name}** no está en la tienda.`)], ephemeral: true });
+          await interaction.reply({ embeds: [errorEmbed("No está en la tienda", `**${item.name}** no está en la tienda.`)], flags: MessageFlags.Ephemeral });
           return;
         }
 
@@ -167,7 +168,7 @@ const command: Command = {
         );
 
         if (!item) {
-          await interaction.reply({ embeds: [errorEmbed("No encontrado", `Objeto **${nombreObj}** no existe.`)], ephemeral: true });
+          await interaction.reply({ embeds: [errorEmbed("No encontrado", `Objeto **${nombreObj}** no existe.`)], flags: MessageFlags.Ephemeral });
           return;
         }
 
@@ -176,7 +177,7 @@ const command: Command = {
           .limit(1);
 
         if (!entry) {
-          await interaction.reply({ embeds: [errorEmbed("No está en la tienda", `**${item.name}** no está en la tienda.`)], ephemeral: true });
+          await interaction.reply({ embeds: [errorEmbed("No está en la tienda", `**${item.name}** no está en la tienda.`)], flags: MessageFlags.Ephemeral });
           return;
         }
 
@@ -206,7 +207,7 @@ const command: Command = {
         if (entries.length === 0) {
           await interaction.reply({
             embeds: [errorEmbed("Tienda vacía", "No hay ningún objeto en la tienda. Usa `/adminshop shop add` para añadir.")],
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
           return;
         }
@@ -247,7 +248,7 @@ const command: Command = {
               "Objeto no encontrado",
               `No existe ningún objeto llamado **${nombreObj}**.\nCrea el objeto primero con \`/admin items create\`.`
             )],
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
           return;
         }
@@ -303,7 +304,7 @@ const command: Command = {
         );
 
         if (!item) {
-          await interaction.reply({ embeds: [errorEmbed("No encontrado", `Objeto **${nombreObj}** no existe.`)], ephemeral: true });
+          await interaction.reply({ embeds: [errorEmbed("No encontrado", `Objeto **${nombreObj}** no existe.`)], flags: MessageFlags.Ephemeral });
           return;
         }
 
@@ -315,7 +316,7 @@ const command: Command = {
           )).limit(1);
 
         if (!entry) {
-          await interaction.reply({ embeds: [errorEmbed("No está en el mercado", `**${item.name}** no está activo en el mercado negro.`)], ephemeral: true });
+          await interaction.reply({ embeds: [errorEmbed("No está en el mercado", `**${item.name}** no está activo en el mercado negro.`)], flags: MessageFlags.Ephemeral });
           return;
         }
 
@@ -345,7 +346,7 @@ const command: Command = {
         if (stock.length === 0) {
           await interaction.reply({
             embeds: [errorEmbed("Mercado negro vacío", "No hay stock activo. Usa `/adminshop blackmarket add` para añadir.")],
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
           return;
         }

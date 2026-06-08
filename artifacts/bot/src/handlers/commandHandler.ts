@@ -1,4 +1,5 @@
-import { Collection, Client, ChatInputCommandInteraction, AutocompleteInteraction } from "discord.js";
+import { Collection, Client, ChatInputCommandInteraction, AutocompleteInteraction, MessageFlags,
+} from "discord.js";
 import { readdirSync, statSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
@@ -57,7 +58,7 @@ export async function handleCommand(interaction: ChatInputCommandInteraction): P
         const remaining = ((expiry - now) / 1000).toFixed(1);
         await interaction.reply({
           embeds: [errorEmbed("Cooldown", `Please wait **${remaining}s** before using this command again.`)],
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return;
       }
@@ -78,9 +79,9 @@ export async function handleCommand(interaction: ChatInputCommandInteraction): P
     });
     const embed = errorEmbed("Error", "Ocurrió un error al ejecutar este comando.");
     if (interaction.replied || interaction.deferred) {
-      await interaction.followUp({ embeds: [embed], ephemeral: true });
+      await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
     } else {
-      await interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     }
   }
 }

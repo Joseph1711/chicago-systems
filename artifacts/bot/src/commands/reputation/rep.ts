@@ -1,4 +1,5 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
+import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, MessageFlags,
+} from "discord.js";
 import { Command } from "../../types/index.js";
 import { db } from "@workspace/db";
 import { usersTable } from "@workspace/db";
@@ -31,18 +32,18 @@ const command: Command = {
       const type = interaction.options.getString("tipo", true);
 
       if (target.id === interaction.user.id) {
-        await interaction.reply({ embeds: [errorEmbed("Inválido", "No puedes darte reputación a ti mismo.")], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Inválido", "No puedes darte reputación a ti mismo.")], flags: MessageFlags.Ephemeral });
         return;
       }
       if (target.bot) {
-        await interaction.reply({ embeds: [errorEmbed("Inválido", "No puedes darle reputación a un bot.")], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Inválido", "No puedes darle reputación a un bot.")], flags: MessageFlags.Ephemeral });
         return;
       }
 
       const cooldownKey = `${interaction.user.id}-${target.id}`;
       const lastRep = repCooldowns.get(cooldownKey) ?? 0;
       if (Date.now() - lastRep < REP_COOLDOWN) {
-        await interaction.reply({ embeds: [errorEmbed("Espera", "Solo puedes dar reputación al mismo usuario una vez cada 24 horas.")], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Espera", "Solo puedes dar reputación al mismo usuario una vez cada 24 horas.")], flags: MessageFlags.Ephemeral });
         return;
       }
 

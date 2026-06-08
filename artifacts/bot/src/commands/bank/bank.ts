@@ -5,6 +5,7 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  MessageFlags,
 } from "discord.js";
 import { Command } from "../../types/index.js";
 import { getOrCreateUser, formatCurrency } from "../../utils/helpers.js";
@@ -33,7 +34,7 @@ const command: Command = {
     if (sub === "depositar") {
       const amount = interaction.options.getInteger("cantidad", true);
       if (user.cash < amount) {
-        await interaction.reply({ embeds: [errorEmbed("Fondos Insuficientes", `Solo tienes **${formatCurrency(user.cash)}** en efectivo.`)], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Fondos Insuficientes", `Solo tienes **${formatCurrency(user.cash)}** en efectivo.`)], flags: MessageFlags.Ephemeral });
         return;
       }
       await removeCash(interaction.user.id, interaction.guildId!, amount);
@@ -45,7 +46,7 @@ const command: Command = {
       const amount = interaction.options.getInteger("cantidad", true);
       const success = await removeBank(interaction.user.id, interaction.guildId!, amount);
       if (!success) {
-        await interaction.reply({ embeds: [errorEmbed("Fondos Insuficientes", `Solo tienes **${formatCurrency(user.bank)}** en el banco.`)], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Fondos Insuficientes", `Solo tienes **${formatCurrency(user.bank)}** en el banco.`)], flags: MessageFlags.Ephemeral });
         return;
       }
       await addCash(interaction.user.id, interaction.guildId!, amount);
@@ -102,13 +103,13 @@ const command: Command = {
         .where(and(eq(loansTable.userId, interaction.user.id), eq(loansTable.guildId, interaction.guildId!), eq(loansTable.status, "active")));
 
       if (existingLoans.length >= 3) {
-        await interaction.reply({ embeds: [errorEmbed("Límite de Préstamos", "Ya tienes 3 préstamos activos. Paga uno antes de solicitar otro.")], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Límite de Préstamos", "Ya tienes 3 préstamos activos. Paga uno antes de solicitar otro.")], flags: MessageFlags.Ephemeral });
         return;
       }
 
       const totalDebt = existingLoans.reduce((s, l) => s + l.balance, 0);
       if (totalDebt > 100000) {
-        await interaction.reply({ embeds: [errorEmbed("Límite de Deuda", "Tu deuda total es demasiado alta.")], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Límite de Deuda", "Tu deuda total es demasiado alta.")], flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -134,11 +135,11 @@ const command: Command = {
         .limit(1);
 
       if (!loan) {
-        await interaction.reply({ embeds: [errorEmbed("Sin Préstamo", "No tienes préstamos activos.")], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Sin Préstamo", "No tienes préstamos activos.")], flags: MessageFlags.Ephemeral });
         return;
       }
       if (user.cash < amount) {
-        await interaction.reply({ embeds: [errorEmbed("Fondos Insuficientes", `Solo tienes **${formatCurrency(user.cash)}** en efectivo.`)], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Fondos Insuficientes", `Solo tienes **${formatCurrency(user.cash)}** en efectivo.`)], flags: MessageFlags.Ephemeral });
         return;
       }
       const repay = Math.min(amount, loan.balance);

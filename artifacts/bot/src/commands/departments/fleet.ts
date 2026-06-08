@@ -1,4 +1,5 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, PermissionFlagsBits } from "discord.js";
+import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, PermissionFlagsBits, MessageFlags,
+} from "discord.js";
 import { Command } from "../../types/index.js";
 import { db } from "@workspace/db";
 import { fleetTypesTable, fleetVehiclesTable, departmentsTable, departmentAuditsTable } from "@workspace/db";
@@ -45,7 +46,7 @@ const command: Command = {
       .then((d) => d.filter((x) => x.acronym.toLowerCase() === deptAcronym.toLowerCase()));
 
     if (!dept) {
-      await interaction.reply({ embeds: [errorEmbed("No Encontrado", `Departamento **${deptAcronym}** no encontrado.`)], ephemeral: true });
+      await interaction.reply({ embeds: [errorEmbed("No Encontrado", `Departamento **${deptAcronym}** no encontrado.`)], flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -56,7 +57,7 @@ const command: Command = {
       if (vehicles.length === 0) {
         await interaction.reply({
           embeds: [errorEmbed("Sin Flota", `**${dept.name}** no tiene vehículos. Usa \`/flota comprar\` para adquirir.`)],
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return;
       }
@@ -88,7 +89,7 @@ const command: Command = {
 
     } else if (sub === "comprar") {
       if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageRoles)) {
-        await interaction.reply({ embeds: [errorEmbed("Sin Permiso", "Necesitas el permiso de Gestionar Roles.")], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Sin Permiso", "Necesitas el permiso de Gestionar Roles.")], flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -102,7 +103,7 @@ const command: Command = {
       if (dept.budget < totalCost) {
         await interaction.reply({
           embeds: [errorEmbed("Presupuesto Insuficiente", `${dept.name} necesita **${formatCurrency(totalCost)}** pero solo tiene **${formatCurrency(dept.budget)}**.`)],
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return;
       }

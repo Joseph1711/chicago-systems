@@ -8,6 +8,7 @@ import {
   PermissionFlagsBits,
   ChannelType,
   TextChannel,
+  MessageFlags,
 } from "discord.js";
 import { Command } from "../../types/index.js";
 import { db } from "@workspace/db";
@@ -23,7 +24,7 @@ registerButton("ticket_close", async (interaction) => {
     .where(and(eq(ticketsTable.channelId, channelId), eq(ticketsTable.status, "open"))).limit(1);
 
   if (!ticket) {
-    await interaction.reply({ embeds: [errorEmbed("Ya Cerrado", "Este ticket ya está cerrado.")], ephemeral: true });
+    await interaction.reply({ embeds: [errorEmbed("Ya Cerrado", "Este ticket ya está cerrado.")], flags: MessageFlags.Ephemeral });
     return;
   }
 
@@ -40,7 +41,7 @@ registerButton("ticket:open", async (interaction) => {
     .where(eq(ticketConfigTable.guildId, guildId)).limit(1);
 
   if (!config?.categoryId) {
-    await interaction.reply({ embeds: [errorEmbed("No Configurado", "Los tickets no están configurados.")], ephemeral: true });
+    await interaction.reply({ embeds: [errorEmbed("No Configurado", "Los tickets no están configurados.")], flags: MessageFlags.Ephemeral });
     return;
   }
 
@@ -48,11 +49,11 @@ registerButton("ticket:open", async (interaction) => {
     .where(and(eq(ticketsTable.guildId, guildId), eq(ticketsTable.userId, interaction.user.id), eq(ticketsTable.status, "open")));
 
   if (openTickets.length >= 3) {
-    await interaction.reply({ embeds: [errorEmbed("Demasiados Tickets", "Ya tienes 3 tickets abiertos.")], ephemeral: true });
+    await interaction.reply({ embeds: [errorEmbed("Demasiados Tickets", "Ya tienes 3 tickets abiertos.")], flags: MessageFlags.Ephemeral });
     return;
   }
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   const allTickets = await db.select().from(ticketsTable).where(eq(ticketsTable.guildId, guildId));
   const ticketNum = allTickets.length + 1;
@@ -142,16 +143,16 @@ const command: Command = {
         .where(and(eq(ticketsTable.guildId, interaction.guildId!), eq(ticketsTable.userId, interaction.user.id), eq(ticketsTable.status, "open")));
 
       if (openTickets.length >= 3) {
-        await interaction.reply({ embeds: [errorEmbed("Demasiados Tickets", "Ya tienes 3 tickets abiertos. Cierra uno antes de abrir otro.")], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Demasiados Tickets", "Ya tienes 3 tickets abiertos. Cierra uno antes de abrir otro.")], flags: MessageFlags.Ephemeral });
         return;
       }
 
       if (!config?.categoryId) {
-        await interaction.reply({ embeds: [errorEmbed("No Configurado", "Los tickets no están configurados. Pide a un admin que use `/admin tickets setup`.")], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("No Configurado", "Los tickets no están configurados. Pide a un admin que use `/admin tickets setup`.")], flags: MessageFlags.Ephemeral });
         return;
       }
 
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
       const allTickets = await db.select().from(ticketsTable).where(eq(ticketsTable.guildId, interaction.guildId!));
       const ticketNum = allTickets.length + 1;
@@ -211,7 +212,7 @@ const command: Command = {
         .where(and(eq(ticketsTable.channelId, interaction.channel!.id), eq(ticketsTable.status, "open"))).limit(1);
 
       if (!ticket) {
-        await interaction.reply({ embeds: [errorEmbed("No es un Ticket", "Este no es un canal de ticket activo.")], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("No es un Ticket", "Este no es un canal de ticket activo.")], flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -232,7 +233,7 @@ const command: Command = {
           : "No hay tickets abiertos.")
         .setTimestamp();
 
-      await interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     }
   },
 };

@@ -1,4 +1,5 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, PermissionFlagsBits } from "discord.js";
+import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, PermissionFlagsBits, MessageFlags,
+} from "discord.js";
 import { Command } from "../../types/index.js";
 import { db } from "@workspace/db";
 import { companiesTable, companyMembersTable } from "@workspace/db";
@@ -26,7 +27,7 @@ const command: Command = {
         .where(and(eq(companiesTable.guildId, interaction.guildId!), eq(companiesTable.ownerId, interaction.user.id), eq(companiesTable.isActive, true)));
 
       if (existing.length > 0) {
-        await interaction.reply({ embeds: [errorEmbed("Ya Tienes Empresa", "Ya eres dueño de una empresa. Solo puedes tener una a la vez.")], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Ya Tienes Empresa", "Ya eres dueño de una empresa. Solo puedes tener una a la vez.")], flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -35,7 +36,7 @@ const command: Command = {
 
       const user = await getOrCreateUser(interaction.user.id, interaction.guildId!, interaction.user.username);
       if (initialFunds > 0 && user.cash < initialFunds) {
-        await interaction.reply({ embeds: [errorEmbed("Fondos Insuficientes", `Necesitas ${formatCurrency(initialFunds)} para fundar la empresa.`)], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Fondos Insuficientes", `Necesitas ${formatCurrency(initialFunds)} para fundar la empresa.`)], flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -67,7 +68,7 @@ const command: Command = {
         .where(and(eq(companiesTable.guildId, interaction.guildId!), eq(companiesTable.ownerId, interaction.user.id), eq(companiesTable.isActive, true)));
 
       if (!company) {
-        await interaction.reply({ embeds: [errorEmbed("Sin Empresa", "No tienes una empresa. Usa `/empresa crear` para fundar una.")], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Sin Empresa", "No tienes una empresa. Usa `/empresa crear` para fundar una.")], flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -92,7 +93,7 @@ const command: Command = {
         .where(and(eq(companiesTable.guildId, interaction.guildId!), eq(companiesTable.ownerId, interaction.user.id), eq(companiesTable.isActive, true)));
 
       if (!company) {
-        await interaction.reply({ embeds: [errorEmbed("Sin Empresa", "No tienes una empresa.")], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Sin Empresa", "No tienes una empresa.")], flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -103,7 +104,7 @@ const command: Command = {
         .where(and(eq(companyMembersTable.companyId, company.id), eq(companyMembersTable.userId, target.id), eq(companyMembersTable.isActive, true)));
 
       if (existing.length > 0) {
-        await interaction.reply({ embeds: [errorEmbed("Ya Empleado", `${target} ya es empleado de tu empresa.`)], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Ya Empleado", `${target} ya es empleado de tu empresa.`)], flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -125,7 +126,7 @@ const command: Command = {
         .where(and(eq(companiesTable.guildId, interaction.guildId!), eq(companiesTable.ownerId, interaction.user.id), eq(companiesTable.isActive, true)));
 
       if (!company) {
-        await interaction.reply({ embeds: [errorEmbed("Sin Empresa", "No tienes una empresa.")], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Sin Empresa", "No tienes una empresa.")], flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -134,7 +135,7 @@ const command: Command = {
         .where(and(eq(companyMembersTable.companyId, company.id), eq(companyMembersTable.userId, target.id), eq(companyMembersTable.isActive, true))).limit(1);
 
       if (!member) {
-        await interaction.reply({ embeds: [errorEmbed("No Empleado", `${target} no es empleado de tu empresa.`)], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("No Empleado", `${target} no es empleado de tu empresa.`)], flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -146,7 +147,7 @@ const command: Command = {
         .where(and(eq(companiesTable.guildId, interaction.guildId!), eq(companiesTable.ownerId, interaction.user.id), eq(companiesTable.isActive, true)));
 
       if (!company) {
-        await interaction.reply({ embeds: [errorEmbed("Sin Empresa", "No tienes una empresa.")], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Sin Empresa", "No tienes una empresa.")], flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -166,14 +167,14 @@ const command: Command = {
         .where(and(eq(companiesTable.guildId, interaction.guildId!), eq(companiesTable.ownerId, interaction.user.id), eq(companiesTable.isActive, true)));
 
       if (!company) {
-        await interaction.reply({ embeds: [errorEmbed("Sin Empresa", "No tienes una empresa.")], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Sin Empresa", "No tienes una empresa.")], flags: MessageFlags.Ephemeral });
         return;
       }
 
       const amount = interaction.options.getInteger("cantidad", true);
       const success = await removeCash(interaction.user.id, interaction.guildId!, amount);
       if (!success) {
-        await interaction.reply({ embeds: [errorEmbed("Fondos Insuficientes", `No tienes ${formatCurrency(amount)} en efectivo.`)], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Fondos Insuficientes", `No tienes ${formatCurrency(amount)} en efectivo.`)], flags: MessageFlags.Ephemeral });
         return;
       }
 

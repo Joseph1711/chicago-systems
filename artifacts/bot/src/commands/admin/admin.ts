@@ -3,6 +3,7 @@ import {
   ChatInputCommandInteraction,
   PermissionFlagsBits,
   EmbedBuilder,
+  MessageFlags,
 } from "discord.js";
 import { Command } from "../../types/index.js";
 import { db } from "@workspace/db";
@@ -121,7 +122,7 @@ const command: Command = {
         const existing = await db.select().from(itemsTable)
           .where(and(eq(itemsTable.guildId, interaction.guildId!), eq(itemsTable.name, name))).limit(1);
         if (existing[0]) {
-          await interaction.reply({ embeds: [errorEmbed("Ya Existe", `El objeto **${name}** ya existe.`)], ephemeral: true });
+          await interaction.reply({ embeds: [errorEmbed("Ya Existe", `El objeto **${name}** ya existe.`)], flags: MessageFlags.Ephemeral });
           return;
         }
 
@@ -141,7 +142,7 @@ const command: Command = {
         const items = await db.select().from(itemsTable)
           .where(and(eq(itemsTable.guildId, interaction.guildId!), eq(itemsTable.isActive, true)));
         if (items.length === 0) {
-          await interaction.reply({ embeds: [errorEmbed("Sin Objetos", "Aún no se han creado objetos.")], ephemeral: true });
+          await interaction.reply({ embeds: [errorEmbed("Sin Objetos", "Aún no se han creado objetos.")], flags: MessageFlags.Ephemeral });
           return;
         }
         const embed = new EmbedBuilder()
@@ -156,7 +157,7 @@ const command: Command = {
         const [item] = await db.select().from(itemsTable)
           .where(and(eq(itemsTable.guildId, interaction.guildId!), eq(itemsTable.name, name))).limit(1);
         if (!item) {
-          await interaction.reply({ embeds: [errorEmbed("No Encontrado", `Objeto **${name}** no encontrado.`)], ephemeral: true });
+          await interaction.reply({ embeds: [errorEmbed("No Encontrado", `Objeto **${name}** no encontrado.`)], flags: MessageFlags.Ephemeral });
           return;
         }
         await db.update(itemsTable).set({ isActive: false }).where(eq(itemsTable.id, item.id));
@@ -242,7 +243,7 @@ const command: Command = {
             { name: "Rol Admin", value: cfg.adminRoleId ? `<@&${cfg.adminRoleId}>` : "No configurado", inline: true }
           )
           .setTimestamp();
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
       }
     }
   },

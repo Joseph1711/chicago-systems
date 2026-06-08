@@ -5,6 +5,7 @@ import {
   ActionRowBuilder,
   StringSelectMenuBuilder,
   StringSelectMenuInteraction,
+  MessageFlags,
 } from "discord.js";
 import { Command } from "../../types/index.js";
 import { Colors } from "../../utils/embeds.js";
@@ -242,19 +243,19 @@ const command: Command = {
     if (category) {
       const embed = buildCategoryEmbed(category);
       if (!embed) {
-        await interaction.reply({ content: "Categoría no encontrada.", ephemeral: true });
+        await interaction.reply({ content: "Categoría no encontrada.", flags: MessageFlags.Ephemeral });
         return;
       }
       await interaction.reply({
         embeds: [embed],
         components: [buildSelectMenu(category)],
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     } else {
       await interaction.reply({
         embeds: [buildOverviewEmbed()],
         components: [buildSelectMenu()],
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
   },

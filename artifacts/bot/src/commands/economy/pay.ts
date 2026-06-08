@@ -1,4 +1,5 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction } from "discord.js";
+import { SlashCommandBuilder, ChatInputCommandInteraction, MessageFlags,
+} from "discord.js";
 import { Command } from "../../types/index.js";
 import { getOrCreateUser, formatCurrency } from "../../utils/helpers.js";
 import { transfer } from "../../services/economyService.js";
@@ -16,11 +17,11 @@ const command: Command = {
     const amount = interaction.options.getInteger("cantidad", true);
 
     if (target.id === interaction.user.id) {
-      await interaction.reply({ embeds: [errorEmbed("Inválido", "No puedes pagarte a ti mismo.")], ephemeral: true });
+      await interaction.reply({ embeds: [errorEmbed("Inválido", "No puedes pagarte a ti mismo.")], flags: MessageFlags.Ephemeral });
       return;
     }
     if (target.bot) {
-      await interaction.reply({ embeds: [errorEmbed("Inválido", "No puedes pagarle a un bot.")], ephemeral: true });
+      await interaction.reply({ embeds: [errorEmbed("Inválido", "No puedes pagarle a un bot.")], flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -28,7 +29,7 @@ const command: Command = {
     const result = await transfer(interaction.user.id, target.id, interaction.guildId!, amount, "transfer");
 
     if (!result.success) {
-      await interaction.reply({ embeds: [errorEmbed("Fondos Insuficientes", `No tienes **${formatCurrency(amount)}** en efectivo.`)], ephemeral: true });
+      await interaction.reply({ embeds: [errorEmbed("Fondos Insuficientes", `No tienes **${formatCurrency(amount)}** en efectivo.`)], flags: MessageFlags.Ephemeral });
       return;
     }
 

@@ -3,6 +3,7 @@ import {
   ChatInputCommandInteraction,
   EmbedBuilder,
   PermissionFlagsBits,
+  MessageFlags,
 } from "discord.js";
 import { Command } from "../../types/index.js";
 import { db } from "@workspace/db";
@@ -60,7 +61,7 @@ const command: Command = {
         .where(and(eq(departmentsTable.guildId, interaction.guildId!), eq(departmentsTable.isActive, true)));
 
       if (depts.length === 0) {
-        await interaction.reply({ embeds: [errorEmbed("Sin Departamentos", "No hay departamentos configurados. Usa `/admin departamento crear`.")], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Sin Departamentos", "No hay departamentos configurados. Usa `/admin departamento crear`.")], flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -76,7 +77,7 @@ const command: Command = {
       const name = interaction.options.getString("nombre", true);
       const dept = await findDepartment(interaction.guildId!, name);
       if (!dept) {
-        await interaction.reply({ embeds: [errorEmbed("No Encontrado", `Departamento **${name}** no encontrado.`)], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("No Encontrado", `Departamento **${name}** no encontrado.`)], flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -101,7 +102,7 @@ const command: Command = {
       const name = interaction.options.getString("nombre", true);
       const dept = await findDepartment(interaction.guildId!, name);
       if (!dept) {
-        await interaction.reply({ embeds: [errorEmbed("No Encontrado", `Departamento **${name}** no encontrado.`)], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("No Encontrado", `Departamento **${name}** no encontrado.`)], flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -125,7 +126,7 @@ const command: Command = {
 
     } else if (sub === "contratar") {
       if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageRoles)) {
-        await interaction.reply({ embeds: [errorEmbed("Sin Permiso", "Necesitas el permiso de Gestionar Roles.")], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Sin Permiso", "Necesitas el permiso de Gestionar Roles.")], flags: MessageFlags.Ephemeral });
         return;
       }
       const deptName = interaction.options.getString("departamento", true);
@@ -134,7 +135,7 @@ const command: Command = {
       const salary = interaction.options.getInteger("salario") ?? 500;
       const dept = await findDepartment(interaction.guildId!, deptName);
       if (!dept) {
-        await interaction.reply({ embeds: [errorEmbed("No Encontrado", `Departamento **${deptName}** no encontrado.`)], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("No Encontrado", `Departamento **${deptName}** no encontrado.`)], flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -146,7 +147,7 @@ const command: Command = {
         )).limit(1);
 
       if (existing[0]) {
-        await interaction.reply({ embeds: [errorEmbed("Ya es Miembro", `${target} ya pertenece a este departamento.`)], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Ya es Miembro", `${target} ya pertenece a este departamento.`)], flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -171,14 +172,14 @@ const command: Command = {
 
     } else if (sub === "despedir") {
       if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageRoles)) {
-        await interaction.reply({ embeds: [errorEmbed("Sin Permiso", "Necesitas el permiso de Gestionar Roles.")], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Sin Permiso", "Necesitas el permiso de Gestionar Roles.")], flags: MessageFlags.Ephemeral });
         return;
       }
       const deptName = interaction.options.getString("departamento", true);
       const target = interaction.options.getUser("usuario", true);
       const dept = await findDepartment(interaction.guildId!, deptName);
       if (!dept) {
-        await interaction.reply({ embeds: [errorEmbed("No Encontrado", `Departamento **${deptName}** no encontrado.`)], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("No Encontrado", `Departamento **${deptName}** no encontrado.`)], flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -190,7 +191,7 @@ const command: Command = {
         )).limit(1);
 
       if (!member) {
-        await interaction.reply({ embeds: [errorEmbed("No Encontrado", `${target} no pertenece a este departamento.`)], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("No Encontrado", `${target} no pertenece a este departamento.`)], flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -209,13 +210,13 @@ const command: Command = {
       const add = interaction.options.getInteger("agregar");
       const dept = await findDepartment(interaction.guildId!, deptName);
       if (!dept) {
-        await interaction.reply({ embeds: [errorEmbed("No Encontrado", `Departamento **${deptName}** no encontrado.`)], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("No Encontrado", `Departamento **${deptName}** no encontrado.`)], flags: MessageFlags.Ephemeral });
         return;
       }
 
       if (add !== null) {
         if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
-          await interaction.reply({ embeds: [errorEmbed("Sin Permiso", "Solo los administradores pueden modificar presupuestos.")], ephemeral: true });
+          await interaction.reply({ embeds: [errorEmbed("Sin Permiso", "Solo los administradores pueden modificar presupuestos.")], flags: MessageFlags.Ephemeral });
           return;
         }
         await db.update(departmentsTable)

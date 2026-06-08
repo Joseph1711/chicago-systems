@@ -1,4 +1,5 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, PermissionFlagsBits } from "discord.js";
+import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, PermissionFlagsBits, MessageFlags,
+} from "discord.js";
 import { Command } from "../../types/index.js";
 import { db } from "@workspace/db";
 import { propertiesTable, propertyTransactionsTable } from "@workspace/db";
@@ -37,7 +38,7 @@ const command: Command = {
       const filtered = type ? props.filter((p) => p.type === type) : props;
 
       if (filtered.length === 0) {
-        await interaction.reply({ embeds: [errorEmbed("Sin Propiedades", "No hay propiedades disponibles para venta/renta.")], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Sin Propiedades", "No hay propiedades disponibles para venta/renta.")], flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -57,17 +58,17 @@ const command: Command = {
         .where(and(eq(propertiesTable.guildId, interaction.guildId!), eq(propertiesTable.id, propId))).limit(1);
 
       if (!prop) {
-        await interaction.reply({ embeds: [errorEmbed("No Encontrado", "Propiedad no encontrada.")], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("No Encontrado", "Propiedad no encontrada.")], flags: MessageFlags.Ephemeral });
         return;
       }
       if (prop.status !== "available") {
-        await interaction.reply({ embeds: [errorEmbed("No Disponible", "Esta propiedad no está disponible para compra.")], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("No Disponible", "Esta propiedad no está disponible para compra.")], flags: MessageFlags.Ephemeral });
         return;
       }
 
       const success = await removeCash(interaction.user.id, interaction.guildId!, prop.price);
       if (!success) {
-        await interaction.reply({ embeds: [errorEmbed("Fondos Insuficientes", `Necesitas **${formatCurrency(prop.price)}** para comprar esta propiedad.`)], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Fondos Insuficientes", `Necesitas **${formatCurrency(prop.price)}** para comprar esta propiedad.`)], flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -87,7 +88,7 @@ const command: Command = {
         .where(and(eq(propertiesTable.id, propId), eq(propertiesTable.ownerId, interaction.user.id))).limit(1);
 
       if (!prop) {
-        await interaction.reply({ embeds: [errorEmbed("No Encontrado", "No eres dueño de esta propiedad.")], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("No Encontrado", "No eres dueño de esta propiedad.")], flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -104,13 +105,13 @@ const command: Command = {
         .where(and(eq(propertiesTable.guildId, interaction.guildId!), eq(propertiesTable.id, propId), eq(propertiesTable.status, "available"))).limit(1);
 
       if (!prop || !prop.rentPrice) {
-        await interaction.reply({ embeds: [errorEmbed("No Disponible", "Esta propiedad no está disponible para renta.")], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("No Disponible", "Esta propiedad no está disponible para renta.")], flags: MessageFlags.Ephemeral });
         return;
       }
 
       const success = await removeCash(interaction.user.id, interaction.guildId!, prop.rentPrice);
       if (!success) {
-        await interaction.reply({ embeds: [errorEmbed("Fondos Insuficientes", `Necesitas **${formatCurrency(prop.rentPrice)}** para la primera renta del día.`)], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Fondos Insuficientes", `Necesitas **${formatCurrency(prop.rentPrice)}** para la primera renta del día.`)], flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -126,7 +127,7 @@ const command: Command = {
         .where(and(eq(propertiesTable.guildId, interaction.guildId!), eq(propertiesTable.renterId, interaction.user.id)));
 
       if (owned.length === 0 && rented.length === 0) {
-        await interaction.reply({ embeds: [errorEmbed("Sin Propiedades", "No tienes ni posees ni rentas ninguna propiedad.")], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed("Sin Propiedades", "No tienes ni posees ni rentas ninguna propiedad.")], flags: MessageFlags.Ephemeral });
         return;
       }
 
