@@ -2,7 +2,9 @@ modules = ["nodejs-24", "python-3.11"]
 
 [deployment]
 router = "application"
-deploymentTarget = "autoscale"
+deploymentTarget = "vm"
+run = ["node", "--enable-source-maps", "artifacts/bot/dist/index.mjs"]
+build = ["pnpm", "run", "build"]
 
 [deployment.postBuild]
 args = ["pnpm", "store", "prune"]
