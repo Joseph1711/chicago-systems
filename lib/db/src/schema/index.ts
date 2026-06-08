@@ -15,3 +15,4 @@ export * from "./contracts";
 export * from "./roles";
 export * from "./config";
 export * from "./shop";
+export * from "./crimen";

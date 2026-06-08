@@ -25,7 +25,10 @@ export type TransactionType =
   | "admin_set"
   | "marketplace_sale"
   | "auction_win"
-  | "black_market";
+  | "black_market"
+  | "drug_sale"
+  | "criminal_mission"
+  | "money_laundering";
 
 export async function addCash(userId: string, guildId: string, amount: number): Promise<void> {
   await db

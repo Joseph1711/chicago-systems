@@ -9,6 +9,8 @@ export const Colors = {
   Economy: 0xf0c040 as ColorResolvable,
   Department: 0x3498db as ColorResolvable,
   BlackMarket: 0x2c2f33 as ColorResolvable,
+  Criminal: 0x8b0000 as ColorResolvable,
+  DirtyMoney: 0x5d4037 as ColorResolvable,
 };
 
 export function successEmbed(title: string, description: string): EmbedBuilder {

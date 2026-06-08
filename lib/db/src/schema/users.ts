@@ -13,6 +13,7 @@ export const usersTable = pgTable("users", {
   xp: integer("xp").notNull().default(0),
   level: integer("level").notNull().default(1),
   reputation: integer("reputation").notNull().default(0),
+  dirtyMoney: bigint("dirty_money", { mode: "number" }).notNull().default(0),
   isVerified: boolean("is_verified").notNull().default(false),
   isBanned: boolean("is_banned").notNull().default(false),
   lastDaily: timestamp("last_daily", { withTimezone: true }),
