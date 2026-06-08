@@ -24,12 +24,12 @@ args = "Chicago Systems Bot"
 name = "Chicago Systems Bot"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "pnpm --filter @workspace/bot run dev"
-
 [workflows.workflow.metadata]
 outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pnpm run dev"
 
 [agent]
 stack = "BEST_EFFORT_FALLBACK"
