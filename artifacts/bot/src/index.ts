@@ -28,7 +28,7 @@ async function main() {
   registerInteractionCreate(client);
   registerMessageCreate(client);
 
-  startKeepAlive(client, 8080);
+  startKeepAlive(client, 3000);
 
   await client.login(config.DISCORD_TOKEN);
 }

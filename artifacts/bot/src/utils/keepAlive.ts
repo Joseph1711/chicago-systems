@@ -1,7 +1,7 @@
 import { createServer } from "http";
 import { Client } from "discord.js";
 
-export function startKeepAlive(client: Client, port = Number(process.env.PORT) || 8080): void {
+export function startKeepAlive(client: Client, port = Number(process.env.BOT_PORT) || 3000): void {
   const server = createServer((req, res) => {
     const isOnline = client.isReady();
     const tag = client.user?.tag ?? "Chicago Systems";
@@ -159,6 +159,14 @@ export function startKeepAlive(client: Client, port = Number(process.env.PORT) |
 
     res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
     res.end(html);
+  });
+
+  server.on("error", (err: NodeJS.ErrnoException) => {
+    if (err.code === "EADDRINUSE") {
+      console.warn(`[keep-alive] Port ${port} already in use — status page disabled.`);
+    } else {
+      console.error(`[keep-alive] Server error: ${err.message}`);
+    }
   });
 
   server.listen(port, "0.0.0.0", () => {
