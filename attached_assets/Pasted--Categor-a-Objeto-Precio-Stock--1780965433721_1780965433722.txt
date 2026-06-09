@@ -1,0 +1,37 @@
+| Categoría    | Objeto                      | Precio | Stock |
+| ------------ | --------------------------- | -----: | ----: |
+| Herramientas | Linterna                    |     50 |    -1 |
+| Herramientas | Caja de Herramientas        |    250 |    -1 |
+| Herramientas | Taladro Eléctrico           |    500 |   100 |
+| Herramientas | Generador Portátil          |   1500 |    50 |
+| Herramientas | Radio Portátil              |   2000 |    75 |
+| Tecnología   | Teléfono Básico             |    300 |    -1 |
+| Tecnología   | Smartphone                  |   1500 |    -1 |
+| Tecnología   | Tablet Profesional          |   3000 |   100 |
+| Tecnología   | Laptop Empresarial          |   5000 |    50 |
+| Tecnología   | Servidor Empresarial        |  25000 |    15 |
+| Equipamiento | Mochila Pequeña             |    500 |    -1 |
+| Equipamiento | Mochila Grande              |   2000 |    -1 |
+| Equipamiento | Caja de Almacenamiento      |   5000 |    50 |
+| Equipamiento | Caja Fuerte                 |  25000 |    25 |
+| Equipamiento | Archivador Empresarial      |   1500 |   100 |
+| Construcción | Cemento                     |     50 |    -1 |
+| Construcción | Ladrillos                   |    100 |    -1 |
+| Construcción | Madera Tratada              |    150 |    -1 |
+| Construcción | Acero Estructural           |    500 |  1000 |
+| Construcción | Cristal Reforzado           |   1000 |   500 |
+| Logística    | Pallet                      |    100 |    -1 |
+| Logística    | Contenedor Pequeño          |   2500 |   100 |
+| Logística    | Contenedor Industrial       |  15000 |    25 |
+| Logística    | Montacargas                 |  30000 |    15 |
+| Logística    | Camión de Carga             | 120000 |    10 |
+| Negocios     | Licencia Comercial Básica   |  10000 |    -1 |
+| Negocios     | Licencia Comercial Premium  |  50000 |    -1 |
+| Negocios     | Registro Empresarial        |  15000 |    -1 |
+| Negocios     | Caja Registradora           |   2500 |    -1 |
+| Negocios     | Terminal de Pagos           |   3500 |    -1 |
+| Especiales   | Cambio de Nombre            |  25000 |    -1 |
+| Especiales   | Espacio Extra de Inventario |  15000 |    -1 |
+| Especiales   | Certificado Empresarial     | 100000 |    -1 |
+| Especiales   | Licencia de Inversor        | 250000 |    -1 |
+| Especiales   | Membresía VIP (30 días)     |  50000 |    -1 |

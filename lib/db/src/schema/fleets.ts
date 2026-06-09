@@ -27,6 +27,29 @@ export const fleetVehiclesTable = pgTable("fleet_vehicles", {
   purchasedAt: timestamp("purchased_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const vehicleDamageReportsTable = pgTable("vehicle_damage_reports", {
+  id: text("id").primaryKey(),
+  guildId: text("guild_id").notNull(),
+  departmentId: text("department_id").notNull(),
+  fleetVehicleId: text("fleet_vehicle_id").notNull(),
+  make: text("make").notNull(),
+  model: text("model").notNull(),
+  units: integer("units").notNull().default(1),
+  damageLevel: text("damage_level").notNull(),
+  description: text("description"),
+  isTotal: boolean("is_total").notNull().default(false),
+  repairDays: integer("repair_days"),
+  repairCompletesAt: timestamp("repair_completes_at", { withTimezone: true }),
+  compensation: bigint("compensation", { mode: "number" }),
+  status: text("status").notNull().default("repairing"),
+  reportedBy: text("reported_by").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const insertVehicleDamageReportSchema = createInsertSchema(vehicleDamageReportsTable).omit({ createdAt: true });
+export type InsertVehicleDamageReport = z.infer<typeof insertVehicleDamageReportSchema>;
+export type VehicleDamageReport = typeof vehicleDamageReportsTable.$inferSelect;
+
 export const insertFleetTypeSchema = createInsertSchema(fleetTypesTable).omit({ createdAt: true });
 export type InsertFleetType = z.infer<typeof insertFleetTypeSchema>;
 export type FleetType = typeof fleetTypesTable.$inferSelect;

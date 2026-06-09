@@ -16,6 +16,8 @@ import {
   companyMembersTable,
   companiesTable,
   savingsAccountsTable,
+  vehicleDamageReportsTable,
+  fleetVehiclesTable,
 } from "@workspace/db";
 import { eq, lte, and, sql, gt, ne } from "drizzle-orm";
 import { generateId, randomBetween, formatCurrency } from "../utils/helpers.js";
@@ -210,6 +212,36 @@ export function startCronJobs(client: Client): void {
       logger.info("Savings interest applied");
     } catch (err) {
       logger.error("Savings interest cron error", { error: err instanceof Error ? err.message : String(err) });
+    }
+  });
+
+  // Process completed vehicle repairs every hour
+  cron.schedule("0 * * * *", async () => {
+    try {
+      const now = new Date();
+      const completed = await db.select().from(vehicleDamageReportsTable)
+        .where(and(
+          eq(vehicleDamageReportsTable.status, "repairing"),
+          lte(vehicleDamageReportsTable.repairCompletesAt, now)
+        ));
+
+      for (const report of completed) {
+        await db.update(vehicleDamageReportsTable)
+          .set({ status: "returned" })
+          .where(eq(vehicleDamageReportsTable.id, report.id));
+
+        logger.info("Vehicle repair completed", {
+          departmentId: report.departmentId,
+          vehicle: `${report.make} ${report.model}`,
+          units: report.units,
+        });
+      }
+
+      if (completed.length > 0) {
+        logger.info("Vehicle repairs processed", { count: completed.length });
+      }
+    } catch (err) {
+      logger.error("Vehicle repair cron error", { error: err instanceof Error ? err.message : String(err) });
     }
   });
 
