@@ -83,9 +83,11 @@ CREATE TABLE IF NOT EXISTS items (
     price NUMERIC DEFAULT 0,
     emoji TEXT DEFAULT '📦',
     is_active BOOLEAN DEFAULT TRUE,
+    black_market_only BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
+ALTER TABLE items ADD COLUMN IF NOT EXISTS black_market_only BOOLEAN DEFAULT FALSE;
 
 CREATE TABLE IF NOT EXISTS user_inventory (
     id TEXT PRIMARY KEY,

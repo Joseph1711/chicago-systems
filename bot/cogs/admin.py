@@ -8,42 +8,103 @@ from bot.helpers import get_or_create_user, get_or_create_guild_config, format_c
 from bot.embeds import success_embed, error_embed, info_embed
 from bot.services.economy import add_cash, add_bank
 
-DEFAULT_ITEMS = [
+SHOP_ITEMS = [
+    # Equipamiento (legal, para civiles y funcionarios)
     {"name":"Radio Policial","category":"Equipamiento","rarity":"uncommon","price":1500,"emoji":"📻"},
     {"name":"Chaleco Antibalas","category":"Equipamiento","rarity":"rare","price":5000,"emoji":"🦺"},
     {"name":"Esposas","category":"Equipamiento","rarity":"common","price":300,"emoji":"⛓️"},
     {"name":"Extintor","category":"Equipamiento","rarity":"common","price":400,"emoji":"🧯"},
     {"name":"Kit Médico","category":"Equipamiento","rarity":"uncommon","price":1200,"emoji":"🩺"},
+    {"name":"Linterna Táctica","category":"Equipamiento","rarity":"common","price":350,"emoji":"🔦"},
+    {"name":"Casco de Seguridad","category":"Equipamiento","rarity":"common","price":600,"emoji":"⛑️"},
+    {"name":"Walkie-Talkie","category":"Equipamiento","rarity":"common","price":800,"emoji":"📡"},
+    {"name":"Binoculares","category":"Equipamiento","rarity":"uncommon","price":1800,"emoji":"🔭"},
+    {"name":"Desfibrilador","category":"Equipamiento","rarity":"rare","price":7500,"emoji":"⚡"},
+    # Tecnología
     {"name":"Laptop","category":"Tecnología","rarity":"uncommon","price":3000,"emoji":"💻"},
     {"name":"Teléfono","category":"Tecnología","rarity":"common","price":500,"emoji":"📱"},
-    {"name":"Dron","category":"Tecnología","rarity":"rare","price":8000,"emoji":"🚁"},
+    {"name":"Dron de Vigilancia","category":"Tecnología","rarity":"rare","price":8000,"emoji":"🚁"},
     {"name":"Cámara","category":"Tecnología","rarity":"common","price":800,"emoji":"📷"},
-    {"name":"GPS","category":"Tecnología","rarity":"common","price":600,"emoji":"🗺️"},
+    {"name":"GPS Profesional","category":"Tecnología","rarity":"common","price":600,"emoji":"🗺️"},
+    {"name":"Tablet","category":"Tecnología","rarity":"uncommon","price":1500,"emoji":"📟"},
+    {"name":"Escáner Forense","category":"Tecnología","rarity":"rare","price":9000,"emoji":"🔬"},
+    # Construcción
     {"name":"Cemento","category":"Construcción","rarity":"common","price":200,"emoji":"🧱"},
     {"name":"Madera","category":"Construcción","rarity":"common","price":150,"emoji":"🪵"},
     {"name":"Acero","category":"Construcción","rarity":"uncommon","price":500,"emoji":"⚙️"},
     {"name":"Vidrio","category":"Construcción","rarity":"common","price":300,"emoji":"🪟"},
     {"name":"Cable","category":"Construcción","rarity":"common","price":250,"emoji":"🔌"},
-    {"name":"Arma Corta","category":"Armas","rarity":"rare","price":10000,"emoji":"🔫"},
-    {"name":"Rifle","category":"Armas","rarity":"epic","price":25000,"emoji":"🎯"},
-    {"name":"Cuchillo","category":"Armas","rarity":"uncommon","price":2000,"emoji":"🗡️"},
-    {"name":"Granada","category":"Armas","rarity":"epic","price":15000,"emoji":"💣"},
-    {"name":"Munición","category":"Armas","rarity":"common","price":100,"emoji":"🔹"},
-    {"name":"Hierba","category":"Drogas","rarity":"common","price":200,"emoji":"🌿"},
-    {"name":"Polvo Blanco","category":"Drogas","rarity":"rare","price":5000,"emoji":"🤍"},
-    {"name":"Pastillas","category":"Drogas","rarity":"uncommon","price":800,"emoji":"💊"},
-    {"name":"Maletín","category":"Accesorios","rarity":"uncommon","price":1000,"emoji":"💼"},
+    {"name":"Herramientas","category":"Construcción","rarity":"uncommon","price":750,"emoji":"🔧"},
+    {"name":"Pintura","category":"Construcción","rarity":"common","price":180,"emoji":"🪣"},
+    # Documentos y Permisos
+    {"name":"Licencia de Conducir","category":"Documentos","rarity":"common","price":500,"emoji":"🪪"},
+    {"name":"Permiso de Trabajo","category":"Documentos","rarity":"uncommon","price":1000,"emoji":"📄"},
+    {"name":"Pase VIP","category":"Documentos","rarity":"rare","price":12000,"emoji":"🎫"},
+    {"name":"Credencial de Prensa","category":"Documentos","rarity":"uncommon","price":2000,"emoji":"📰"},
+    {"name":"Certificado Médico","category":"Documentos","rarity":"common","price":300,"emoji":"📋"},
+    # Accesorios
+    {"name":"Maletín Ejecutivo","category":"Accesorios","rarity":"uncommon","price":1000,"emoji":"💼"},
     {"name":"Reloj de Lujo","category":"Accesorios","rarity":"epic","price":50000,"emoji":"⌚"},
     {"name":"Cadena de Oro","category":"Accesorios","rarity":"rare","price":20000,"emoji":"📿"},
     {"name":"Gafas Oscuras","category":"Accesorios","rarity":"common","price":400,"emoji":"🕶️"},
+    {"name":"Mochila Táctica","category":"Accesorios","rarity":"uncommon","price":900,"emoji":"🎒"},
+    {"name":"Traje Formal","category":"Accesorios","rarity":"uncommon","price":3500,"emoji":"👔"},
+    {"name":"Chaqueta de Cuero","category":"Accesorios","rarity":"uncommon","price":2800,"emoji":"🧥"},
+    {"name":"Botas de Combate","category":"Accesorios","rarity":"uncommon","price":1200,"emoji":"👢"},
+    # Consumibles
     {"name":"Comida","category":"Consumibles","rarity":"common","price":100,"emoji":"🍔"},
     {"name":"Agua","category":"Consumibles","rarity":"common","price":50,"emoji":"💧"},
     {"name":"Energizante","category":"Consumibles","rarity":"common","price":200,"emoji":"⚡"},
     {"name":"Café","category":"Consumibles","rarity":"common","price":80,"emoji":"☕"},
     {"name":"Gasolina","category":"Consumibles","rarity":"common","price":150,"emoji":"⛽"},
-    {"name":"Llave Maestra","category":"Especial","rarity":"legendary","price":100000,"emoji":"🗝️"},
-    {"name":"Placa Falsa","category":"Especial","rarity":"epic","price":30000,"emoji":"🪪"},
-    {"name":"Explosivo C4","category":"Especial","rarity":"legendary","price":80000,"emoji":"💥"},
+    {"name":"Botiquín Básico","category":"Consumibles","rarity":"common","price":250,"emoji":"🩹"},
+    {"name":"Sandwich","category":"Consumibles","rarity":"common","price":75,"emoji":"🥪"},
+    {"name":"Bebida Isotónica","category":"Consumibles","rarity":"common","price":120,"emoji":"🧃"},
+    # Vehículos y Repuestos
+    {"name":"Llanta de Repuesto","category":"Vehículos","rarity":"common","price":400,"emoji":"🛞"},
+    {"name":"Aceite de Motor","category":"Vehículos","rarity":"common","price":300,"emoji":"🛢️"},
+    {"name":"Kit de Herramientas Auto","category":"Vehículos","rarity":"uncommon","price":1500,"emoji":"🔩"},
+    {"name":"Extintor Vehicular","category":"Vehículos","rarity":"common","price":350,"emoji":"🧯"},
+]
+
+BLACK_MARKET_ITEMS = [
+    # Armas ilegales
+    {"name":"Arma Corta","category":"Armas","rarity":"rare","price":10000,"emoji":"🔫"},
+    {"name":"Rifle de Asalto","category":"Armas","rarity":"epic","price":28000,"emoji":"🎯"},
+    {"name":"Cuchillo de Combate","category":"Armas","rarity":"uncommon","price":2500,"emoji":"🗡️"},
+    {"name":"Granada","category":"Armas","rarity":"epic","price":18000,"emoji":"💣"},
+    {"name":"Munición Especial","category":"Armas","rarity":"uncommon","price":500,"emoji":"🔹"},
+    {"name":"Silenciador","category":"Armas","rarity":"rare","price":6000,"emoji":"🔧"},
+    {"name":"Escopeta","category":"Armas","rarity":"rare","price":15000,"emoji":"🔫"},
+    {"name":"Francotirador","category":"Armas","rarity":"legendary","price":60000,"emoji":"🎯"},
+    {"name":"Chaleco Militar","category":"Armas","rarity":"epic","price":20000,"emoji":"🥋"},
+    # Drogas
+    {"name":"Hierba","category":"Drogas","rarity":"common","price":200,"emoji":"🌿"},
+    {"name":"Polvo Blanco","category":"Drogas","rarity":"rare","price":5000,"emoji":"🤍"},
+    {"name":"Pastillas","category":"Drogas","rarity":"uncommon","price":800,"emoji":"💊"},
+    {"name":"Metanfetamina","category":"Drogas","rarity":"rare","price":4500,"emoji":"💎"},
+    {"name":"Opiáceos","category":"Drogas","rarity":"epic","price":9000,"emoji":"🔴"},
+    {"name":"Solvente Tóxico","category":"Drogas","rarity":"uncommon","price":1200,"emoji":"🧪"},
+    # Documentos Falsos
+    {"name":"Pasaporte Falso","category":"Documentos Falsos","rarity":"epic","price":35000,"emoji":"📕"},
+    {"name":"Placa Policial Falsa","category":"Documentos Falsos","rarity":"epic","price":30000,"emoji":"🪪"},
+    {"name":"Identificación Robada","category":"Documentos Falsos","rarity":"rare","price":12000,"emoji":"🆔"},
+    {"name":"Licencia Falsificada","category":"Documentos Falsos","rarity":"rare","price":8000,"emoji":"📃"},
+    {"name":"Placas Vehiculares Robadas","category":"Documentos Falsos","rarity":"uncommon","price":3000,"emoji":"🔲"},
+    # Equipo Especial
+    {"name":"Llave Maestra","category":"Equipo Especial","rarity":"legendary","price":100000,"emoji":"🗝️"},
+    {"name":"Explosivo C4","category":"Equipo Especial","rarity":"legendary","price":80000,"emoji":"💥"},
+    {"name":"Cámara Espía","category":"Equipo Especial","rarity":"rare","price":15000,"emoji":"👁️"},
+    {"name":"Escáner de Frecuencias","category":"Equipo Especial","rarity":"epic","price":25000,"emoji":"📡"},
+    {"name":"Bloqueador de Señal","category":"Equipo Especial","rarity":"rare","price":18000,"emoji":"📵"},
+    {"name":"Kit de Hackeo","category":"Equipo Especial","rarity":"epic","price":40000,"emoji":"💻"},
+    # Contrabando
+    {"name":"Cigarrillos de Contrabando","category":"Contrabando","rarity":"common","price":600,"emoji":"🚬"},
+    {"name":"Alcohol Ilegal","category":"Contrabando","rarity":"uncommon","price":1500,"emoji":"🥃"},
+    {"name":"Diamantes Robados","category":"Contrabando","rarity":"legendary","price":75000,"emoji":"💎"},
+    {"name":"Arte Falsificado","category":"Contrabando","rarity":"epic","price":45000,"emoji":"🖼️"},
+    {"name":"Electrónicos Robados","category":"Contrabando","rarity":"rare","price":8000,"emoji":"📦"},
+    {"name":"Vehículo Chop Shop","category":"Contrabando","rarity":"rare","price":20000,"emoji":"🚗"},
 ]
 
 def admin_check(interaction: discord.Interaction):
@@ -345,6 +406,103 @@ class Admin(commands.Cog):
         if edad_minima is not None: changes.append(f"Edad mínima: {edad_minima} días")
         await interaction.response.send_message(embed=success_embed("Verificación configurada", "\n".join(changes) or "Sin cambios"), ephemeral=True)
 
+    @admin_cfg.command(name="ver", description="Ver todas las configuraciones actuales del servidor")
+    async def cfg_ver(self, interaction: discord.Interaction):
+        if not admin_check(interaction):
+            await interaction.response.send_message(embed=error_embed("Sin permisos", "Solo administradores"), ephemeral=True)
+            return
+        await interaction.response.defer(ephemeral=True)
+        gid = str(interaction.guild_id)
+
+        cfg = execute("SELECT * FROM guild_config WHERE guild_id=$1", (gid,), fetch="one") or {}
+        ver_cfg = execute("SELECT * FROM verification_config WHERE guild_id=$1", (gid,), fetch="one") or {}
+        tick_cfg = execute("SELECT * FROM ticket_config WHERE guild_id=$1", (gid,), fetch="one") or {}
+        app_cfg = execute("SELECT * FROM application_config WHERE guild_id=$1", (gid,), fetch="one") or {}
+        treasury = execute("SELECT balance FROM treasury WHERE guild_id=$1", (gid,), fetch="one") or {}
+        dept_count = (execute("SELECT COUNT(*) as c FROM departments WHERE guild_id=$1", (gid,), fetch="one") or {}).get("c", 0)
+        company_count = (execute("SELECT COUNT(*) as c FROM companies WHERE guild_id=$1", (gid,), fetch="one") or {}).get("c", 0)
+        prop_count = (execute("SELECT COUNT(*) as c FROM properties WHERE guild_id=$1", (gid,), fetch="one") or {}).get("c", 0)
+        player_count = (execute("SELECT COUNT(*) as c FROM users WHERE guild_id=$1", (gid,), fetch="one") or {}).get("c", 0)
+        shop_count = (execute("SELECT COUNT(*) as c FROM shop WHERE guild_id=$1", (gid,), fetch="one") or {}).get("c", 0)
+        bm_count = (execute("SELECT COUNT(*) as c FROM black_market_stock WHERE quantity > 0", fetch="one") or {}).get("c", 0)
+        reward_count = (execute("SELECT COUNT(*) as c FROM level_rewards WHERE guild_id=$1", (gid,), fetch="one") or {}).get("c", 0)
+
+        e = info_embed(
+            f"⚙️ Configuración de {interaction.guild.name}",
+            f"Resumen completo del servidor para administradores"
+        )
+
+        log_ch = f"<#{cfg.get('log_channel_id')}>" if cfg.get("log_channel_id") else "No configurado"
+        e.add_field(
+            name="💰 Economía",
+            value=(
+                f"Diario: **{format_currency(cfg.get('daily_amount', 500))}**\n"
+                f"Semanal: **{format_currency(cfg.get('weekly_amount', 2500))}**\n"
+                f"Impuesto: **{cfg.get('tax_rate', 5)}%**\n"
+                f"Mult. XP: **{cfg.get('xp_multiplier', 1.0)}x**\n"
+                f"Canal log: {log_ch}"
+            ),
+            inline=True
+        )
+
+        treas_bal = format_currency(treasury.get("balance", 0)) if treasury else "**$0** (sin inicializar)"
+        e.add_field(
+            name="🏛️ Tesoro & Stats",
+            value=(
+                f"Tesoro: **{treas_bal}**\n"
+                f"Jugadores: **{player_count}**\n"
+                f"Departamentos: **{dept_count}**\n"
+                f"Empresas: **{company_count}**\n"
+                f"Propiedades: **{prop_count}**"
+            ),
+            inline=True
+        )
+
+        ver_role = f"<@&{ver_cfg.get('verified_role_id')}>" if ver_cfg.get("verified_role_id") else "No config."
+        ver_log = f"<#{ver_cfg.get('log_channel_id')}>" if ver_cfg.get("log_channel_id") else "No config."
+        e.add_field(
+            name="✅ Verificación",
+            value=(
+                f"Rol verificado: {ver_role}\n"
+                f"Canal log: {ver_log}\n"
+                f"Edad mínima: **{ver_cfg.get('min_account_age_days', 7)} días**"
+            ) if ver_cfg else "❌ Sin configurar — usa `/admin configuracion verificacion`",
+            inline=True
+        )
+
+        tick_cat = f"**{tick_cfg.get('category_id', 'N/A')}**" if tick_cfg.get("category_id") else "No config."
+        tick_rol = f"<@&{tick_cfg.get('support_role_id')}>" if tick_cfg.get("support_role_id") else "No config."
+        e.add_field(
+            name="🎫 Tickets",
+            value=(
+                f"Categoría ID: {tick_cat}\n"
+                f"Rol soporte: {tick_rol}"
+            ) if tick_cfg else "❌ Sin configurar — usa `/admin configuracion tickets`",
+            inline=True
+        )
+
+        app_log = f"<#{app_cfg.get('log_channel_id')}>" if app_cfg.get("log_channel_id") else "No config."
+        e.add_field(
+            name="📋 Solicitudes",
+            value=(
+                f"Canal log: {app_log}"
+            ) if app_cfg else "❌ Sin configurar — usa `/admin configuracion solicitudes`",
+            inline=True
+        )
+
+        e.add_field(
+            name="🛍️ Tienda & Mercado",
+            value=(
+                f"Objetos en tienda: **{shop_count}**\n"
+                f"Stock mercado negro: **{bm_count}** items activos\n"
+                f"Recompensas de nivel: **{reward_count}**"
+            ),
+            inline=True
+        )
+
+        e.set_footer(text=f"ID del servidor: {gid}")
+        await interaction.followup.send(embed=e, ephemeral=True)
+
     @admin_cfg.command(name="tickets", description="Configurar el sistema de tickets")
     @app_commands.describe(categoria="Categoría de Discord para tickets", rol_soporte="Rol de soporte")
     async def cfg_tickets(self, interaction: discord.Interaction, categoria: discord.CategoryChannel = None, rol_soporte: discord.Role = None):
@@ -405,7 +563,7 @@ class Admin(commands.Cog):
         execute("DELETE FROM shop WHERE guild_id=$1 AND item_id=$2", (str(interaction.guild_id), item["id"]))
         await interaction.response.send_message(embed=success_embed("Objeto quitado", f"**{item['name']}** eliminado de la tienda"), ephemeral=True)
 
-    @adminshop.command(name="predeterminados", description="Cargar el catálogo predeterminado de 35 objetos")
+    @adminshop.command(name="predeterminados", description="Cargar el catálogo legal de objetos en la tienda normal")
     async def shop_defaults(self, interaction: discord.Interaction):
         if not admin_check(interaction):
             await interaction.response.send_message(embed=error_embed("Sin permisos", "Solo administradores"), ephemeral=True)
@@ -413,17 +571,19 @@ class Admin(commands.Cog):
         await interaction.response.defer(ephemeral=True)
         created = 0
         added_to_shop = 0
-        for item_data in DEFAULT_ITEMS:
+        for item_data in SHOP_ITEMS:
             existing = execute("SELECT id FROM items WHERE name=$1 AND is_active=true LIMIT 1", (item_data["name"],), fetch="one")
             if not existing:
                 item_id = generate_id()
                 execute(
-                    """INSERT INTO items (id, name, category, rarity, price, emoji, is_active, created_at, updated_at)
-                       VALUES ($1,$2,$3,$4,$5,$6,true,NOW(),NOW())""",
+                    """INSERT INTO items (id, name, category, rarity, price, emoji, is_active, black_market_only, created_at, updated_at)
+                       VALUES ($1,$2,$3,$4,$5,$6,true,false,NOW(),NOW())""",
                     (item_id, item_data["name"], item_data["category"], item_data["rarity"], item_data["price"], item_data["emoji"])
                 )
                 existing = {"id": item_id}
                 created += 1
+            else:
+                execute("UPDATE items SET black_market_only=false, updated_at=NOW() WHERE id=$1", (existing["id"],))
             shop_entry = execute("SELECT id FROM shop WHERE guild_id=$1 AND item_id=$2", (str(interaction.guild_id), existing["id"]), fetch="one")
             if not shop_entry:
                 execute(
@@ -432,7 +592,45 @@ class Admin(commands.Cog):
                     (generate_id(), str(interaction.guild_id), existing["id"], item_data["price"])
                 )
                 added_to_shop += 1
-        await interaction.followup.send(embed=success_embed("Catálogo cargado", f"**{created}** objetos creados, **{added_to_shop}** añadidos a la tienda"), ephemeral=True)
+        await interaction.followup.send(embed=success_embed(
+            "🛍️ Tienda cargada",
+            f"**{created}** objetos nuevos creados\n**{added_to_shop}** añadidos a la tienda\n\nTotal catálogo: **{len(SHOP_ITEMS)} objetos legales**"
+        ), ephemeral=True)
+
+    @adminshop.command(name="mercadonegro", description="Cargar el catálogo ilegal exclusivo del mercado negro")
+    async def shop_blackmarket_defaults(self, interaction: discord.Interaction):
+        if not admin_check(interaction):
+            await interaction.response.send_message(embed=error_embed("Sin permisos", "Solo administradores"), ephemeral=True)
+            return
+        await interaction.response.defer(ephemeral=True)
+        created = 0
+        added_to_bm = 0
+        import random
+        for item_data in BLACK_MARKET_ITEMS:
+            existing = execute("SELECT id FROM items WHERE name=$1 AND is_active=true LIMIT 1", (item_data["name"],), fetch="one")
+            if not existing:
+                item_id = generate_id()
+                execute(
+                    """INSERT INTO items (id, name, category, rarity, price, emoji, is_active, black_market_only, created_at, updated_at)
+                       VALUES ($1,$2,$3,$4,$5,$6,true,true,NOW(),NOW())""",
+                    (item_id, item_data["name"], item_data["category"], item_data["rarity"], item_data["price"], item_data["emoji"])
+                )
+                existing = {"id": item_id}
+                created += 1
+            else:
+                execute("UPDATE items SET black_market_only=true, updated_at=NOW() WHERE id=$1", (existing["id"],))
+            bm_entry = execute("SELECT id FROM black_market_stock WHERE item_id=$1 LIMIT 1", (existing["id"],), fetch="one")
+            if not bm_entry:
+                execute(
+                    """INSERT INTO black_market_stock (id, item_id, price_modifier, quantity, created_at, updated_at)
+                       VALUES ($1,$2,$3,$4,NOW(),NOW())""",
+                    (generate_id(), existing["id"], round(random.uniform(1.0, 1.8), 2), random.randint(1, 8))
+                )
+                added_to_bm += 1
+        await interaction.followup.send(embed=success_embed(
+            "🕶️ Mercado Negro cargado",
+            f"**{created}** objetos ilegales creados\n**{added_to_bm}** añadidos al stock del mercado negro\n\nTotal catálogo: **{len(BLACK_MARKET_ITEMS)} objetos ilegales**\n\nEl stock se rota automáticamente cada 6 horas."
+        ), ephemeral=True)
 
     # /tesoro
     tesoro_group = app_commands.Group(name="tesoro", description="Gestión del tesoro")

@@ -213,7 +213,8 @@ class Marketplace(commands.Cog):
             items = execute(
                 """SELECT s.*, i.name, i.description, i.rarity, i.emoji, i.category FROM shop s
                    JOIN items i ON i.id=s.item_id
-                   WHERE s.guild_id=$1 AND (s.stock=-1 OR s.stock>0) AND i.category ILIKE $2
+                   WHERE s.guild_id=$1 AND (s.stock=-1 OR s.stock>0)
+                     AND i.category ILIKE $2 AND i.black_market_only=false
                    ORDER BY i.category, i.name""",
                 (str(interaction.guild_id), f"%{categoria}%"), fetch="all"
             ) or []
@@ -221,8 +222,8 @@ class Marketplace(commands.Cog):
             items = execute(
                 """SELECT s.*, i.name, i.description, i.rarity, i.emoji, i.category FROM shop s
                    JOIN items i ON i.id=s.item_id
-                   WHERE s.guild_id=$1 AND (s.stock=-1 OR s.stock>0)
-                   ORDER BY i.category, i.name LIMIT 20""",
+                   WHERE s.guild_id=$1 AND (s.stock=-1 OR s.stock>0) AND i.black_market_only=false
+                   ORDER BY i.category, i.name LIMIT 25""",
                 (str(interaction.guild_id),), fetch="all"
             ) or []
         e = info_embed("🛍️ Tienda")
@@ -255,7 +256,8 @@ class Marketplace(commands.Cog):
         shop_item = execute(
             """SELECT s.*, i.name, i.rarity, i.emoji FROM shop s
                JOIN items i ON i.id=s.item_id
-               WHERE s.guild_id=$1 AND i.name ILIKE $2 AND (s.stock=-1 OR s.stock>0) LIMIT 1""",
+               WHERE s.guild_id=$1 AND i.name ILIKE $2
+                 AND (s.stock=-1 OR s.stock>0) AND i.black_market_only=false LIMIT 1""",
             (str(interaction.guild_id), f"%{objeto}%"), fetch="one"
         )
         if not shop_item:
@@ -283,7 +285,7 @@ class Marketplace(commands.Cog):
         item = execute(
             """SELECT s.*, i.name, i.description, i.rarity, i.emoji, i.category FROM shop s
                JOIN items i ON i.id=s.item_id
-               WHERE s.guild_id=$1 AND i.name ILIKE $2 LIMIT 1""",
+               WHERE s.guild_id=$1 AND i.name ILIKE $2 AND i.black_market_only=false LIMIT 1""",
             (str(interaction.guild_id), f"%{objeto}%"), fetch="one"
         )
         if not item:

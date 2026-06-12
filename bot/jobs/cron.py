@@ -41,22 +41,25 @@ def setup_jobs(bot):
     @scheduler.scheduled_job("interval", hours=6)
     async def rotate_blackmarket():
         try:
+            import random
             items = execute(
-                "SELECT id FROM items WHERE is_active=true ORDER BY RANDOM() LIMIT 5",
+                "SELECT id FROM items WHERE is_active=true AND black_market_only=true ORDER BY RANDOM() LIMIT 8",
                 fetch="all"
             ) or []
-            execute("DELETE FROM black_market_stock WHERE guild_id IS NULL OR TRUE")
-            import random
+            if not items:
+                logger.info("Black market rotation skipped: no black-market-only items found")
+                return
+            execute("DELETE FROM black_market_stock")
             for item in items:
                 execute(
                     """INSERT INTO black_market_stock (id, item_id, price_modifier, quantity, created_at, updated_at)
                        VALUES ($1,$2,$3,$4,NOW(),NOW())
                        ON CONFLICT DO NOTHING""",
                     (generate_id(), item["id"],
-                     round(random.uniform(0.8, 1.5), 2),
-                     random.randint(1, 10))
+                     round(random.uniform(1.0, 2.0), 2),
+                     random.randint(1, 8))
                 )
-            logger.info("Black market rotated")
+            logger.info(f"Black market rotated: {len(items)} illegal items stocked")
         except Exception as e:
             logger.error(f"Black market rotation error: {e}")
 
