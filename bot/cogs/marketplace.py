@@ -301,6 +301,40 @@ class Marketplace(commands.Cog):
     # /mercadonegro
     mercadonegro = app_commands.Group(name="mercadonegro", description="Mercado negro")
 
+    @mercadonegro.command(name="vender", description="Vender un objeto al mercado negro")
+    @app_commands.describe(objeto="Nombre del objeto", cantidad="Cantidad a vender")
+    async def bm_vender(self, interaction: discord.Interaction, objeto: str, cantidad: int = 1):
+        cd = check_cooldown(f"bm:{interaction.user.id}:{interaction.guild_id}", 10)
+        if cd:
+            await interaction.response.send_message(embed=error_embed("Espera", f"Intenta en `{cd:.1f}s`"), ephemeral=True)
+            return
+        inv_item = execute(
+            """SELECT ui.*, i.name, i.price, i.rarity, i.emoji FROM user_inventory ui
+               JOIN items i ON i.id=ui.item_id
+               WHERE ui.discord_id=$1 AND ui.guild_id=$2 AND i.name ILIKE $3 AND ui.quantity >= $4 LIMIT 1""",
+            (str(interaction.user.id), str(interaction.guild_id), f"%{objeto}%", cantidad), fetch="one"
+        )
+        if not inv_item:
+            await interaction.response.send_message(embed=error_embed("No encontrado", f"No tienes **{objeto}** x{cantidad} en tu inventario"), ephemeral=True)
+            return
+        sale_price = int(float(inv_item.get("price", 100)) * 0.6 * cantidad)
+        ok = remove_item(str(interaction.user.id), str(interaction.guild_id), inv_item["item_id"], cantidad)
+        if not ok:
+            await interaction.response.send_message(embed=error_embed("Error", "No se pudo procesar la venta"), ephemeral=True)
+            return
+        stock_row = execute("SELECT id, quantity FROM black_market_stock WHERE item_id=$1 LIMIT 1", (inv_item["item_id"],), fetch="one")
+        if stock_row:
+            execute("UPDATE black_market_stock SET quantity=quantity+$1, updated_at=NOW() WHERE id=$2", (cantidad, stock_row["id"]))
+        add_cash(str(interaction.user.id), str(interaction.guild_id), sale_price)
+        log_transaction(str(interaction.user.id), str(interaction.guild_id), "blackmarket_sale", sale_price, f"Mercado negro (venta): {inv_item['name']} x{cantidad}")
+        execute(
+            """INSERT INTO black_market_transactions (id, discord_id, guild_id, item_id, quantity, price, created_at)
+               VALUES ($1,$2,$3,$4,$5,$6,NOW())""",
+            (generate_id(), str(interaction.user.id), str(interaction.guild_id), inv_item["item_id"], cantidad, sale_price)
+        )
+        emoji = inv_item.get("emoji") or "📦"
+        await interaction.response.send_message(embed=blackmarket_embed("🕶️ Venta en el mercado negro", f"Vendiste {emoji} **{inv_item['name']}** x{cantidad} por **{format_currency(sale_price)}** (60% del valor)"), ephemeral=True)
+
     @mercadonegro.command(name="explorar", description="Ver el stock actual del mercado negro")
     async def bm_explorar(self, interaction: discord.Interaction):
         cd = check_cooldown(f"bm:{interaction.user.id}:{interaction.guild_id}", 5)

@@ -85,6 +85,46 @@ class Verification(commands.Cog):
         else:
             await interaction.response.send_message(embed=error_embed("No verificado", "Tu cuenta aún no está verificada. Usa `/verificar panel` o el panel de verificación."), ephemeral=True)
 
+    @verificar.command(name="usuario", description="Ver el estado de verificación de otro usuario (admin)")
+    @app_commands.describe(usuario="Usuario a verificar")
+    async def usuario_estado(self, interaction: discord.Interaction, usuario: discord.Member):
+        if not interaction.user.guild_permissions.manage_roles and not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message(embed=error_embed("Sin permisos", "Necesitas permisos de gestión de roles"), ephemeral=True)
+            return
+        user = get_or_create_user(str(usuario.id), str(interaction.guild_id))
+        log = execute(
+            "SELECT * FROM verification_logs WHERE guild_id=$1 AND discord_id=$2 ORDER BY created_at DESC LIMIT 1",
+            (str(interaction.guild_id), str(usuario.id)), fetch="one"
+        )
+        if user.get("is_verified"):
+            e = success_embed(f"✅ {usuario.display_name} está verificado")
+            if log:
+                e.add_field(name="IGN", value=log.get("ign","N/A"), inline=True)
+                e.add_field(name="Edad declarada", value=log.get("age","N/A"), inline=True)
+        else:
+            e = error_embed(f"❌ {usuario.display_name} no está verificado")
+        await interaction.response.send_message(embed=e, ephemeral=True)
+
+    @verificar.command(name="revocar", description="Revocar la verificación de un usuario (admin)")
+    @app_commands.describe(usuario="Usuario a revocar")
+    async def revocar(self, interaction: discord.Interaction, usuario: discord.Member):
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message(embed=error_embed("Sin permisos", "Solo administradores"), ephemeral=True)
+            return
+        execute(
+            "UPDATE users SET is_verified=false, updated_at=NOW() WHERE discord_id=$1 AND guild_id=$2",
+            (str(usuario.id), str(interaction.guild_id))
+        )
+        config = execute("SELECT * FROM verification_config WHERE guild_id=$1", (str(interaction.guild_id),), fetch="one")
+        if config and config.get("verified_role_id"):
+            role = interaction.guild.get_role(int(config["verified_role_id"]))
+            if role:
+                try:
+                    await usuario.remove_roles(role, reason="Verificación revocada")
+                except Exception:
+                    pass
+        await interaction.response.send_message(embed=success_embed("Verificación revocada", f"La verificación de {usuario.mention} fue revocada"), ephemeral=True)
+
 
 async def setup(bot):
     await bot.add_cog(Verification(bot))

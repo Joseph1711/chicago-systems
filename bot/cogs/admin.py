@@ -178,6 +178,115 @@ class Admin(commands.Cog):
         )
         await interaction.response.send_message(embed=success_embed("Propiedad creada", f"**{nombre}** — {format_currency(precio)} de compra"), ephemeral=True)
 
+    # Admin xp
+    admin_xp = app_commands.Group(name="xp", description="Gestión de XP", parent=admin)
+
+    @admin_xp.command(name="dar", description="Dar XP a un jugador")
+    @app_commands.describe(usuario="Jugador", cantidad="Cantidad de XP")
+    async def xp_dar(self, interaction: discord.Interaction, usuario: discord.Member, cantidad: int):
+        if not admin_check(interaction):
+            await interaction.response.send_message(embed=error_embed("Sin permisos", "Solo administradores"), ephemeral=True)
+            return
+        get_or_create_user(str(usuario.id), str(interaction.guild_id))
+        execute("UPDATE users SET xp=xp+$1, updated_at=NOW() WHERE discord_id=$2 AND guild_id=$3", (cantidad, str(usuario.id), str(interaction.guild_id)))
+        await interaction.response.send_message(embed=success_embed("XP otorgado", f"Se dieron **{cantidad} XP** a {usuario.mention}"), ephemeral=True)
+
+    @admin_xp.command(name="quitar", description="Quitar XP a un jugador")
+    @app_commands.describe(usuario="Jugador", cantidad="Cantidad de XP")
+    async def xp_quitar(self, interaction: discord.Interaction, usuario: discord.Member, cantidad: int):
+        if not admin_check(interaction):
+            await interaction.response.send_message(embed=error_embed("Sin permisos", "Solo administradores"), ephemeral=True)
+            return
+        execute("UPDATE users SET xp=GREATEST(0,xp-$1), updated_at=NOW() WHERE discord_id=$2 AND guild_id=$3", (cantidad, str(usuario.id), str(interaction.guild_id)))
+        await interaction.response.send_message(embed=success_embed("XP quitado", f"Se quitaron **{cantidad} XP** a {usuario.mention}"), ephemeral=True)
+
+    @admin_xp.command(name="multiplicador", description="Ver/establecer el multiplicador de XP del servidor")
+    @app_commands.describe(valor="Multiplicador (ej: 1.5 = +50% XP). Omite para ver el actual.")
+    async def xp_multiplicador(self, interaction: discord.Interaction, valor: float = None):
+        if not admin_check(interaction):
+            await interaction.response.send_message(embed=error_embed("Sin permisos", "Solo administradores"), ephemeral=True)
+            return
+        get_or_create_guild_config(str(interaction.guild_id))
+        if valor is None:
+            cfg = execute("SELECT xp_multiplier FROM guild_config WHERE guild_id=$1", (str(interaction.guild_id),), fetch="one")
+            mult = cfg.get("xp_multiplier", 1.0) if cfg else 1.0
+            await interaction.response.send_message(embed=info_embed("Multiplicador de XP", f"Actual: **{mult}x**"), ephemeral=True)
+        else:
+            execute("UPDATE guild_config SET xp_multiplier=$1, updated_at=NOW() WHERE guild_id=$2", (max(0.1, min(valor, 10.0)), str(interaction.guild_id)))
+            await interaction.response.send_message(embed=success_embed("Multiplicador actualizado", f"XP multiplicado por **{valor}x**"), ephemeral=True)
+
+    # Admin reset
+    admin_reset = app_commands.Group(name="reset", description="Restablecer datos de jugadores", parent=admin)
+
+    @admin_reset.command(name="usuario", description="Restablecer economía de un jugador")
+    @app_commands.describe(usuario="Jugador a restablecer")
+    async def reset_usuario(self, interaction: discord.Interaction, usuario: discord.Member):
+        if not admin_check(interaction):
+            await interaction.response.send_message(embed=error_embed("Sin permisos", "Solo administradores"), ephemeral=True)
+            return
+        execute(
+            "UPDATE users SET cash=0, bank=0, xp=0, level=1, reputation=0, dirty_money=0, updated_at=NOW() WHERE discord_id=$1 AND guild_id=$2",
+            (str(usuario.id), str(interaction.guild_id))
+        )
+        await interaction.response.send_message(embed=success_embed("Usuario restablecido", f"Economía y estadísticas de {usuario.mention} fueron reiniciadas"), ephemeral=True)
+
+    @admin_reset.command(name="cooldowns", description="Reiniciar los cooldowns de un jugador")
+    @app_commands.describe(usuario="Jugador")
+    async def reset_cooldowns(self, interaction: discord.Interaction, usuario: discord.Member):
+        if not admin_check(interaction):
+            await interaction.response.send_message(embed=error_embed("Sin permisos", "Solo administradores"), ephemeral=True)
+            return
+        execute(
+            "UPDATE users SET last_daily=NULL, last_weekly=NULL, last_work=NULL, updated_at=NOW() WHERE discord_id=$1 AND guild_id=$2",
+            (str(usuario.id), str(interaction.guild_id))
+        )
+        await interaction.response.send_message(embed=success_embed("Cooldowns reiniciados", f"Cooldowns de {usuario.mention} fueron reiniciados"), ephemeral=True)
+
+    # Admin recompensas de nivel
+    admin_rewards = app_commands.Group(name="recompensas", description="Recompensas de nivel", parent=admin)
+
+    @admin_rewards.command(name="agregar", description="Agregar recompensa de rol por nivel")
+    @app_commands.describe(nivel="Nivel requerido", rol="Rol a otorgar")
+    async def rewards_agregar(self, interaction: discord.Interaction, nivel: int, rol: discord.Role):
+        if not admin_check(interaction):
+            await interaction.response.send_message(embed=error_embed("Sin permisos", "Solo administradores"), ephemeral=True)
+            return
+        existing = execute("SELECT id FROM level_rewards WHERE guild_id=$1 AND level=$2", (str(interaction.guild_id), nivel), fetch="one")
+        if existing:
+            execute("UPDATE level_rewards SET role_id=$1, updated_at=NOW() WHERE id=$2", (str(rol.id), existing["id"]))
+        else:
+            execute(
+                "INSERT INTO level_rewards (id, guild_id, level, role_id, created_at, updated_at) VALUES ($1,$2,$3,$4,NOW(),NOW())",
+                (generate_id(), str(interaction.guild_id), nivel, str(rol.id))
+            )
+        await interaction.response.send_message(embed=success_embed("Recompensa agregada", f"Nivel **{nivel}** → {rol.mention}"), ephemeral=True)
+
+    @admin_rewards.command(name="lista", description="Ver recompensas de nivel configuradas")
+    async def rewards_lista(self, interaction: discord.Interaction):
+        if not admin_check(interaction):
+            await interaction.response.send_message(embed=error_embed("Sin permisos", "Solo administradores"), ephemeral=True)
+            return
+        rewards = execute(
+            "SELECT * FROM level_rewards WHERE guild_id=$1 ORDER BY level",
+            (str(interaction.guild_id),), fetch="all"
+        ) or []
+        e = info_embed("🎖️ Recompensas de Nivel")
+        if not rewards:
+            e.description = "No hay recompensas de nivel configuradas"
+        else:
+            lines = [f"Nivel **{r['level']}** → <@&{r['role_id']}>" for r in rewards]
+            e.description = "\n".join(lines)
+        await interaction.response.send_message(embed=e, ephemeral=True)
+
+    @admin_rewards.command(name="quitar", description="Quitar recompensa de un nivel")
+    @app_commands.describe(nivel="Nivel")
+    async def rewards_quitar(self, interaction: discord.Interaction, nivel: int):
+        if not admin_check(interaction):
+            await interaction.response.send_message(embed=error_embed("Sin permisos", "Solo administradores"), ephemeral=True)
+            return
+        execute("DELETE FROM level_rewards WHERE guild_id=$1 AND level=$2", (str(interaction.guild_id), nivel))
+        await interaction.response.send_message(embed=success_embed("Recompensa eliminada", f"Recompensa de nivel **{nivel}** eliminada"), ephemeral=True)
+
     # Admin configuracion
     admin_cfg = app_commands.Group(name="configuracion", description="Configuración del servidor", parent=admin)
 
@@ -200,6 +309,63 @@ class Admin(commands.Cog):
         get_or_create_guild_config(str(interaction.guild_id))
         execute("UPDATE guild_config SET weekly_amount=$1, updated_at=NOW() WHERE guild_id=$2", (cantidad, str(interaction.guild_id)))
         await interaction.response.send_message(embed=success_embed("Configurado", f"Recompensa semanal actualizada a **{format_currency(cantidad)}**"), ephemeral=True)
+
+    @admin_cfg.command(name="canal_log", description="Configurar canal de logs del servidor")
+    @app_commands.describe(canal="Canal de texto para logs")
+    async def cfg_canal_log(self, interaction: discord.Interaction, canal: discord.TextChannel):
+        if not admin_check(interaction):
+            await interaction.response.send_message(embed=error_embed("Sin permisos", "Solo administradores"), ephemeral=True)
+            return
+        get_or_create_guild_config(str(interaction.guild_id))
+        execute("UPDATE guild_config SET log_channel_id=$1, updated_at=NOW() WHERE guild_id=$2", (str(canal.id), str(interaction.guild_id)))
+        await interaction.response.send_message(embed=success_embed("Canal configurado", f"Canal de logs: {canal.mention}"), ephemeral=True)
+
+    @admin_cfg.command(name="verificacion", description="Configurar sistema de verificación")
+    @app_commands.describe(rol="Rol de verificado", canal_log="Canal de logs", edad_minima="Edad mínima de cuenta en días")
+    async def cfg_verificacion(self, interaction: discord.Interaction, rol: discord.Role = None, canal_log: discord.TextChannel = None, edad_minima: int = None):
+        if not admin_check(interaction):
+            await interaction.response.send_message(embed=error_embed("Sin permisos", "Solo administradores"), ephemeral=True)
+            return
+        existing = execute("SELECT id FROM verification_config WHERE guild_id=$1", (str(interaction.guild_id),), fetch="one")
+        if existing:
+            if rol:
+                execute("UPDATE verification_config SET verified_role_id=$1, updated_at=NOW() WHERE guild_id=$2", (str(rol.id), str(interaction.guild_id)))
+            if canal_log:
+                execute("UPDATE verification_config SET log_channel_id=$1, updated_at=NOW() WHERE guild_id=$2", (str(canal_log.id), str(interaction.guild_id)))
+            if edad_minima is not None:
+                execute("UPDATE verification_config SET min_account_age_days=$1, updated_at=NOW() WHERE guild_id=$2", (edad_minima, str(interaction.guild_id)))
+        else:
+            execute(
+                "INSERT INTO verification_config (id, guild_id, verified_role_id, log_channel_id, min_account_age_days, created_at, updated_at) VALUES ($1,$2,$3,$4,$5,NOW(),NOW())",
+                (generate_id(), str(interaction.guild_id), str(rol.id) if rol else None, str(canal_log.id) if canal_log else None, edad_minima or 7)
+            )
+        changes = []
+        if rol: changes.append(f"Rol: {rol.mention}")
+        if canal_log: changes.append(f"Log: {canal_log.mention}")
+        if edad_minima is not None: changes.append(f"Edad mínima: {edad_minima} días")
+        await interaction.response.send_message(embed=success_embed("Verificación configurada", "\n".join(changes) or "Sin cambios"), ephemeral=True)
+
+    @admin_cfg.command(name="tickets", description="Configurar el sistema de tickets")
+    @app_commands.describe(categoria="Categoría de Discord para tickets", rol_soporte="Rol de soporte")
+    async def cfg_tickets(self, interaction: discord.Interaction, categoria: discord.CategoryChannel = None, rol_soporte: discord.Role = None):
+        if not admin_check(interaction):
+            await interaction.response.send_message(embed=error_embed("Sin permisos", "Solo administradores"), ephemeral=True)
+            return
+        existing = execute("SELECT id FROM ticket_config WHERE guild_id=$1", (str(interaction.guild_id),), fetch="one")
+        if existing:
+            if categoria:
+                execute("UPDATE ticket_config SET category_id=$1, updated_at=NOW() WHERE guild_id=$2", (str(categoria.id), str(interaction.guild_id)))
+            if rol_soporte:
+                execute("UPDATE ticket_config SET support_role_id=$1, updated_at=NOW() WHERE guild_id=$2", (str(rol_soporte.id), str(interaction.guild_id)))
+        else:
+            execute(
+                "INSERT INTO ticket_config (id, guild_id, category_id, support_role_id, created_at, updated_at) VALUES ($1,$2,$3,$4,NOW(),NOW())",
+                (generate_id(), str(interaction.guild_id), str(categoria.id) if categoria else None, str(rol_soporte.id) if rol_soporte else None)
+            )
+        changes = []
+        if categoria: changes.append(f"Categoría: **{categoria.name}**")
+        if rol_soporte: changes.append(f"Soporte: {rol_soporte.mention}")
+        await interaction.response.send_message(embed=success_embed("Tickets configurados", "\n".join(changes) or "Sin cambios"), ephemeral=True)
 
     # /adminshop
     adminshop = app_commands.Group(name="adminshop", description="Gestión de la tienda")

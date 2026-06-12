@@ -175,6 +175,47 @@ class Tickets(commands.Cog):
             e.description = "\n".join(lines)
         await interaction.response.send_message(embed=e, ephemeral=True)
 
+    @ticket.command(name="agregar", description="Agregar un usuario al ticket actual")
+    @app_commands.describe(usuario="Usuario a agregar")
+    async def agregar(self, interaction: discord.Interaction, usuario: discord.Member):
+        if not interaction.user.guild_permissions.manage_channels and not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message(embed=error_embed("Sin permisos", "Necesitas permisos de gestión de canales"), ephemeral=True)
+            return
+        ticket = execute(
+            "SELECT * FROM tickets WHERE channel_id=$1 AND status='open'",
+            (str(interaction.channel_id),), fetch="one"
+        )
+        if not ticket:
+            await interaction.response.send_message(embed=error_embed("Error", "No hay ticket abierto en este canal"), ephemeral=True)
+            return
+        try:
+            await interaction.channel.set_permissions(usuario, read_messages=True, send_messages=True)
+            await interaction.response.send_message(embed=success_embed("Usuario agregado", f"{usuario.mention} fue agregado al ticket"))
+        except discord.Forbidden:
+            await interaction.response.send_message(embed=error_embed("Sin permisos de bot", "No puedo modificar permisos del canal"), ephemeral=True)
+
+    @ticket.command(name="remover", description="Remover un usuario del ticket actual")
+    @app_commands.describe(usuario="Usuario a remover")
+    async def remover(self, interaction: discord.Interaction, usuario: discord.Member):
+        if not interaction.user.guild_permissions.manage_channels and not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message(embed=error_embed("Sin permisos", "Necesitas permisos de gestión de canales"), ephemeral=True)
+            return
+        ticket = execute(
+            "SELECT * FROM tickets WHERE channel_id=$1 AND status='open'",
+            (str(interaction.channel_id),), fetch="one"
+        )
+        if not ticket:
+            await interaction.response.send_message(embed=error_embed("Error", "No hay ticket abierto en este canal"), ephemeral=True)
+            return
+        if ticket.get("creator_id") == str(usuario.id):
+            await interaction.response.send_message(embed=error_embed("Acción inválida", "No puedes remover al creador del ticket"), ephemeral=True)
+            return
+        try:
+            await interaction.channel.set_permissions(usuario, overwrite=None)
+            await interaction.response.send_message(embed=success_embed("Usuario removido", f"{usuario.mention} fue removido del ticket"))
+        except discord.Forbidden:
+            await interaction.response.send_message(embed=error_embed("Sin permisos de bot", "No puedo modificar permisos del canal"), ephemeral=True)
+
 
 async def setup(bot):
     await bot.add_cog(Tickets(bot))
