@@ -1,13 +1,14 @@
 import discord
 import logging
 import datetime
+import random
 
 from bot.helpers import get_or_create_user
 from bot.services.levels import add_xp
+from bot.middleware.antispam import is_spamming
+from bot.config import XP_PER_MESSAGE_MIN, XP_PER_MESSAGE_MAX
 
 logger = logging.getLogger("bot")
-
-ANTISPAM = {}
 
 def setup_events(bot):
     @bot.event
@@ -27,17 +28,9 @@ def setup_events(bot):
             return
         if not message.guild:
             return
-        # Anti-spam: 5 messages per 5 seconds per user per guild
-        key = f"{message.author.id}:{message.guild.id}"
-        now = datetime.datetime.utcnow().timestamp()
-        window = ANTISPAM.setdefault(key, [])
-        ANTISPAM[key] = [t for t in window if now - t < 5]
-        ANTISPAM[key].append(now)
-        if len(ANTISPAM[key]) > 5:
+        if is_spamming(str(message.author.id), str(message.guild.id)):
             return
-        # XP for messages (5-15 XP per message)
-        import random
-        xp_amount = random.randint(5, 15)
+        xp_amount = random.randint(XP_PER_MESSAGE_MIN, XP_PER_MESSAGE_MAX)
         try:
             get_or_create_user(str(message.author.id), str(message.guild.id))
             await add_xp(str(message.author.id), str(message.guild.id), xp_amount, bot)

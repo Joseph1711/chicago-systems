@@ -18,6 +18,10 @@ def format_uptime(seconds):
 
 @app.route("/")
 def home():
+    return "Bot is running"
+
+@app.route("/dashboard")
+def dashboard():
     bot = _bot_ref
     if bot and bot.is_ready():
         status = "EN LÍNEA"

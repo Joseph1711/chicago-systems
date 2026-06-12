@@ -3,7 +3,7 @@ modules = ["nodejs-24", "python-3.11"]
 [deployment]
 router = "application"
 deploymentTarget = "vm"
-run = ["node", "--enable-source-maps", "artifacts/bot/dist/index.mjs"]
+run = ["python", "main.py"]
 build = ["pnpm", "run", "build"]
 
 [deployment.postBuild]
