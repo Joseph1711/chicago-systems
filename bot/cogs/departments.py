@@ -242,8 +242,8 @@ class Departments(commands.Cog):
             await interaction.response.send_message(embed=error_embed("Sin presupuesto", f"El departamento necesita **{format_currency(price)}**. Presupuesto actual: **{format_currency(dept.get('budget',0))}**"), ephemeral=True)
             return
         execute("UPDATE departments SET budget=budget-$1, updated_at=NOW() WHERE id=$2", (price, dept["id"]))
-        import random, string
-        plate = "".join(random.choices(string.ascii_uppercase + string.digits, k=7))
+        import random as _random, string
+        plate = "".join(_random.choices(string.ascii_uppercase + string.digits, k=7))
         execute(
             """INSERT INTO fleet_vehicles (id, department_id, guild_id, vehicle_type_id, plate, status, created_at, updated_at)
                VALUES ($1,$2,$3,$4,$5,'active',NOW(),NOW())""",
@@ -251,6 +251,85 @@ class Departments(commands.Cog):
         )
         emoji = DEPT_EMOJI.get(dept.get("acronym",""),"🏢")
         await interaction.response.send_message(embed=success_embed(f"{emoji} Vehículo adquirido", f"**{vtype['name']}** (Placa: `{plate}`) comprado por **{format_currency(price)}**"))
+
+    @flota.command(name="solicitar", description="Solicitar el uso de un vehículo de la flota")
+    @app_commands.describe(acronimo="Acrónimo del departamento", placa="Placa del vehículo")
+    async def flota_solicitar(self, interaction: discord.Interaction, acronimo: str, placa: str):
+        dept = execute("SELECT * FROM departments WHERE guild_id=$1 AND acronym ILIKE $2", (str(interaction.guild_id), acronimo), fetch="one")
+        if not dept:
+            await interaction.response.send_message(embed=error_embed("No encontrado", f"Departamento **{acronimo}** no existe"), ephemeral=True)
+            return
+        member_row = execute(
+            "SELECT id FROM department_members WHERE department_id=$1 AND discord_id=$2",
+            (dept["id"], str(interaction.user.id)), fetch="one"
+        )
+        if not member_row:
+            await interaction.response.send_message(embed=error_embed("No eres miembro", f"Debes pertenecer al **{dept['name']}** para solicitar vehículos"), ephemeral=True)
+            return
+        vehicle = execute(
+            "SELECT fv.*, fvt.name as type_name FROM fleet_vehicles fv JOIN fleet_vehicle_types fvt ON fvt.id=fv.vehicle_type_id WHERE fv.department_id=$1 AND fv.plate ILIKE $2 AND fv.status='active'",
+            (dept["id"], f"%{placa}%"), fetch="one"
+        )
+        if not vehicle:
+            await interaction.response.send_message(embed=error_embed("No disponible", f"Vehículo con placa `{placa}` no encontrado o no disponible"), ephemeral=True)
+            return
+        execute("UPDATE fleet_vehicles SET status='in_use', assigned_to=$1, updated_at=NOW() WHERE id=$2", (str(interaction.user.id), vehicle["id"]))
+        emoji = DEPT_EMOJI.get(dept.get("acronym",""),"🏢")
+        await interaction.response.send_message(embed=success_embed(f"{emoji} Vehículo asignado", f"**{vehicle['type_name']}** (Placa: `{vehicle['plate']}`) está bajo tu cargo"))
+
+    @flota.command(name="devolver", description="Devolver un vehículo asignado")
+    @app_commands.describe(placa="Placa del vehículo a devolver")
+    async def flota_devolver(self, interaction: discord.Interaction, placa: str):
+        vehicle = execute(
+            "SELECT fv.*, fvt.name as type_name, d.name as dept_name, d.acronym FROM fleet_vehicles fv JOIN fleet_vehicle_types fvt ON fvt.id=fv.vehicle_type_id JOIN departments d ON d.id=fv.department_id WHERE fv.guild_id=$1 AND fv.assigned_to=$2 AND fv.plate ILIKE $3",
+            (str(interaction.guild_id), str(interaction.user.id), f"%{placa}%"), fetch="one"
+        )
+        if not vehicle:
+            await interaction.response.send_message(embed=error_embed("No encontrado", f"No tienes un vehículo con placa `{placa}` asignado"), ephemeral=True)
+            return
+        execute("UPDATE fleet_vehicles SET status='active', assigned_to=NULL, updated_at=NOW() WHERE id=$1", (vehicle["id"],))
+        emoji = DEPT_EMOJI.get(vehicle.get("acronym",""),"🏢")
+        await interaction.response.send_message(embed=success_embed(f"{emoji} Vehículo devuelto", f"**{vehicle['type_name']}** (Placa: `{vehicle['plate']}`) devuelto al {vehicle['dept_name']}"))
+
+    @flota.command(name="reparar", description="Reportar un vehículo para reparación")
+    @app_commands.describe(placa="Placa del vehículo", razon="Razón del reporte")
+    async def flota_reparar(self, interaction: discord.Interaction, placa: str, razon: str = "Daños en servicio"):
+        vehicle = execute(
+            "SELECT fv.*, fvt.name as type_name, d.name as dept_name, d.acronym FROM fleet_vehicles fv JOIN fleet_vehicle_types fvt ON fvt.id=fv.vehicle_type_id JOIN departments d ON d.id=fv.department_id WHERE fv.guild_id=$1 AND fv.plate ILIKE $2",
+            (str(interaction.guild_id), f"%{placa}%"), fetch="one"
+        )
+        if not vehicle:
+            await interaction.response.send_message(embed=error_embed("No encontrado", f"Vehículo con placa `{placa}` no encontrado"), ephemeral=True)
+            return
+        if vehicle.get("status") == "repairing":
+            await interaction.response.send_message(embed=error_embed("Ya en reparación", f"El vehículo `{placa}` ya está siendo reparado"), ephemeral=True)
+            return
+        execute("UPDATE fleet_vehicles SET status='repairing', assigned_to=NULL, updated_at=NOW() WHERE id=$1", (vehicle["id"],))
+        emoji = DEPT_EMOJI.get(vehicle.get("acronym",""),"🏢")
+        await interaction.response.send_message(embed=success_embed(f"🔧 Vehículo enviado a reparación", f"**{vehicle['type_name']}** (Placa: `{vehicle['plate']}`) — Razón: {razon}"))
+
+    @flota.command(name="gestionar", description="Gestionar estado de un vehículo (admin)")
+    @app_commands.describe(placa="Placa del vehículo", estado="Nuevo estado")
+    @app_commands.choices(estado=[
+        app_commands.Choice(name="✅ Activo", value="active"),
+        app_commands.Choice(name="🔧 En reparación", value="repairing"),
+        app_commands.Choice(name="❌ Dañado", value="damaged"),
+        app_commands.Choice(name="📦 Devuelto/Baja", value="returned"),
+    ])
+    async def flota_gestionar(self, interaction: discord.Interaction, placa: str, estado: str):
+        if not interaction.user.guild_permissions.manage_roles and not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message(embed=error_embed("Sin permisos", "Necesitas permisos de administración"), ephemeral=True)
+            return
+        vehicle = execute(
+            "SELECT fv.*, fvt.name as type_name FROM fleet_vehicles fv JOIN fleet_vehicle_types fvt ON fvt.id=fv.vehicle_type_id WHERE fv.guild_id=$1 AND fv.plate ILIKE $2",
+            (str(interaction.guild_id), f"%{placa}%"), fetch="one"
+        )
+        if not vehicle:
+            await interaction.response.send_message(embed=error_embed("No encontrado", f"Vehículo con placa `{placa}` no encontrado"), ephemeral=True)
+            return
+        execute("UPDATE fleet_vehicles SET status=$1, assigned_to=NULL, updated_at=NOW() WHERE id=$2", (estado, vehicle["id"]))
+        status_emoji = {"active":"✅","repairing":"🔧","damaged":"❌","returned":"📦"}.get(estado,"❓")
+        await interaction.response.send_message(embed=success_embed(f"{status_emoji} Estado actualizado", f"**{vehicle['type_name']}** (Placa: `{vehicle['plate']}`) → **{estado}**"), ephemeral=True)
 
 
 async def setup(bot):
