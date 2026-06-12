@@ -4,55 +4,77 @@ A full enterprise Discord roleplay bot for the Chicago Systems RP community. All
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/bot run dev` — run the bot in development (tsx watch)
-- `pnpm --filter @workspace/bot run deploy-commands` — deploy slash commands to Discord
-- `pnpm --filter @workspace/bot run build` — production esbuild bundle
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- `pnpm run typecheck` — full typecheck across all packages
+- `python main.py` — run the bot
+- `pip install -r requirements.txt` — install/update dependencies
 
 ## Stack
 
-- pnpm workspaces, Node.js 24, TypeScript 5.9
-- Bot: Discord.js v14, tsx (dev), esbuild (prod)
-- DB: PostgreSQL + Drizzle ORM
-- Scheduling: node-cron
-- Logging: winston
-- Validation: Zod
+- Python 3.11
+- Bot: discord.py 2.3.2
+- DB: PostgreSQL + psycopg2-binary (raw SQL)
+- Scheduling: APScheduler (AsyncIOScheduler)
+- Keep-alive: Flask (HTTP dashboard on port 3000)
 
 ## Where things live
 
-- `artifacts/bot/src/commands/` — all slash commands, organized by category
-- `artifacts/bot/src/events/` — Discord client event handlers (ready, interactionCreate, messageCreate)
-- `artifacts/bot/src/handlers/` — command + interaction (button/modal/selectmenu) dispatch
-- `artifacts/bot/src/services/` — business logic (economy, levels, inventory)
-- `artifacts/bot/src/jobs/` — cron jobs (investments, salaries, auctions, black market rotation)
-- `artifacts/bot/src/middleware/` — anti-spam rate limiter
-- `lib/db/src/schema/` — all 16 Drizzle schema files
+```
+main.py              — entry point, loads cogs, starts scheduler + keep-alive
+keep_alive.py        — Flask HTTP server (/, /status)
+requirements.txt     — Python dependencies
+bot/
+  db.py              — psycopg2 connection + execute helpers
+  helpers.py         — generate_id, format_currency, get_or_create_user, XP math
+  embeds.py          — embed builders (success, error, warning, info, economy, etc.)
+  events.py          — on_ready, on_message (XP + anti-spam), on_guild_join
+  services/
+    economy.py       — add/remove cash & bank, transfer, log_transaction
+    inventory.py     — add_item, remove_item, get_user_inventory
+    levels.py        — add_xp, apply_level_rewards
+  jobs/
+    cron.py          — 7 APScheduler jobs (investments, auctions, salaries, etc.)
+  cogs/
+    economy.py       — /balance /diario /semanal /trabajar /pagar /tabla /donar
+    bank.py          — /banco /invertir
+    inventory.py     — /inventario /dar
+    marketplace.py   — /mercado /tienda /mercadonegro
+    departments.py   — /departamento /flota
+    companies.py     — /empresa
+    properties.py    — /propiedad
+    social.py        — /reputacion /nivel
+    tickets.py       — /ticket (with button UI)
+    verification.py  — /verificar (with modal UI)
+    crimen.py        — /drogas /lavar /misiones
+    admin.py         — /admin /adminshop /tesoro /solicitar /contrato
+    help.py          — /ayuda (with select menu UI)
+```
 
-## Database Schema (16 tables groups)
+## Database Schema (16 table groups)
 
-- `users` — player profiles, cash, bank, XP, level, reputation
-- `economy` — transactions log, custom jobs, tax config
-- `inventory` / `items` — per-user item ownership
-- `marketplace` — direct sale listings, auctions, ratings
-- `bank` — savings accounts, investments, loans, treasury
-- `departments` — CPD/CFD/Sheriff/ISP/DOT/DOJ/EMA + members + inventory + audit log
-- `fleets` — department vehicle fleet types and vehicles
-- `properties` — buyable/rentable properties
-- `companies` — player-owned businesses + employees + inventory
-- `verification` — config and log for account gating
-- `tickets` — support ticket system + config
-- `applications` — department/staff application submissions + config
-- `blackmarket` — rotating stock + transactions
-- `contracts` — public/private/bounty contracts
-- `roles` — auto-roles, temp roles, level rewards
-- `config` — per-guild server configuration
+- `users` — player profiles, cash, bank, XP, level, reputation, dirty_money
+- `transactions` — transaction log
+- `jobs` — custom work jobs per guild
+- `user_inventory` / `items` — per-user item ownership
+- `marketplace_listings` / `auctions` — player marketplace
+- `shop` — bot shop stock
+- `black_market_stock` / `black_market_transactions` — rotating black market
+- `savings_accounts` / `investments` / `loans` / `treasury` — bank system
+- `departments` / `department_members` / `department_audit` — government depts
+- `fleet_vehicle_types` / `fleet_vehicles` — department vehicles
+- `companies` / `company_members` — player businesses
+- `properties` / `property_transactions` — real estate
+- `verification_config` / `verification_logs` — account gating
+- `ticket_config` / `tickets` — support tickets
+- `application_config` / `applications` — dept applications
+- `contracts` — public/private bounty contracts
+- `temp_roles` / `level_rewards` / `auto_roles` — role automation
+- `guild_config` — per-guild server settings
+- `drug_operations` / `money_laundering` / `criminal_missions` — crime system
 
 ## Slash Commands (en español)
 
 | Categoría | Comandos |
 |-----------|----------|
-| Economía | `/balance`, `/diario`, `/semanal`, `/trabajar`, `/pagar`, `/tabla` |
+| Economía | `/balance`, `/diario`, `/semanal`, `/trabajar`, `/pagar`, `/tabla`, `/donar` |
 | Banco | `/banco depositar/retirar/info/ahorros/prestamo/pagar`, `/invertir crear/portafolio` |
 | Inventario | `/inventario`, `/dar` |
 | Mercado | `/mercado lista/vender/comprar/subasta/pujar/cancelar` |
@@ -65,16 +87,18 @@ A full enterprise Discord roleplay bot for the Chicago Systems RP community. All
 | Tickets | `/ticket panel/abrir/cerrar/lista` |
 | Reputación | `/reputacion dar/perfil` |
 | Niveles | `/nivel` |
-| Solicitudes | `/solicitar` (CPD/CFD/Sheriff/DOT/Staff) |
+| Solicitudes | `/solicitar aplicar/lista` |
 | Contratos | `/contrato lista/crear/aceptar/completar` |
 | Admin | `/admin economia/objetos/departamento/propiedad/configuracion`, `/tesoro`, `/adminshop` |
 | Ayuda | `/ayuda [categoria]` |
+| Crimen | `/drogas sembrar/cosechar/info`, `/lavar dinero/info`, `/misiones lista/iniciar/completar/activas` |
 
-## Cron Jobs
+## Cron Jobs (APScheduler)
 
 - Every 2 min — expire auctions, pay out winners
 - Every 5 min — remove expired temporary roles
 - Every 10 min — process mature investments
+- Every hour — process vehicle repairs
 - Every 6 hrs — rotate black market stock
 - Daily midnight — pay department + company salaries
 - Daily 6am — apply savings account interest
@@ -82,10 +106,12 @@ A full enterprise Discord roleplay bot for the Chicago Systems RP community. All
 ## Architecture decisions
 
 - All guild data is fully isolated by `guild_id` — one bot instance serves multiple servers
-- Commands are loaded dynamically from `src/commands/*/*.ts` — add a file to add a command
-- Button/modal/select handlers use a registry pattern with `registerButton/registerModal` — handlers can be co-located with their commands
+- Cogs loaded dynamically in `main.py` — add an entry to `COGS` list to add a module
+- Slash commands sync automatically on `on_ready` via `bot.tree.sync()`
 - Economy is entirely cash+bank; no separate "wallet" concept
 - Black market stock rotates server-side on a cron; no user-facing rotation trigger needed
+- Raw SQL via psycopg2 with `RealDictCursor` — all rows returned as dicts
+- Anti-spam: 5 messages per 5-second window per user per guild (in-memory)
 
 ## Product
 
@@ -97,8 +123,9 @@ _Populate as you build — explicit user instructions worth remembering across s
 
 ## Gotchas
 
-- Always run `pnpm --filter @workspace/bot run deploy-commands` after adding new commands — they won't appear in Discord until registered
-- Run `pnpm run typecheck:libs` before `pnpm --filter @workspace/bot run typecheck` when schema changes are made
-- `setDefaultMemberPermissions` is only valid on the top-level `SlashCommandBuilder`, not on subcommand builders
-- Winston structured logging: pass message string first, then meta object second (opposite of pino)
-- Discord.js v14: `message.channel` can be partial/DM, always check `isTextBased()` before calling `.send()`
+- discord.py slash commands sync on `on_ready` automatically — no separate deploy step needed
+- APScheduler AsyncIOScheduler must be used (not BackgroundScheduler) in async bot context
+- psycopg2 `RealDictCursor` returns `RealDictRow` objects — convert to `dict()` before mutating
+- `app_commands.Group` nested inside a `Cog` works fine; nested sub-groups need `parent=` kwarg
+- `interaction.response.is_done()` check needed before followup vs send_message calls
+- Port 3000 is used by the Flask keep-alive server

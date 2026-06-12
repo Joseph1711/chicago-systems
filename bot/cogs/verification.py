@@ -1,0 +1,90 @@
+import discord
+from discord import app_commands
+from discord.ext import commands
+import datetime
+
+from bot.db import execute
+from bot.helpers import get_or_create_user, generate_id
+from bot.embeds import success_embed, error_embed, info_embed
+
+class VerifyModal(discord.ui.Modal, title="Verificación de Cuenta"):
+    ign = discord.ui.TextInput(label="Nombre en el juego (IGN)", placeholder="Tu nombre de personaje...", max_length=64)
+    age = discord.ui.TextInput(label="Edad", placeholder="Tu edad...", max_length=3)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        user = get_or_create_user(str(interaction.user.id), str(interaction.guild_id))
+        if user.get("is_verified"):
+            await interaction.response.send_message(embed=error_embed("Ya verificado", "Tu cuenta ya está verificada"), ephemeral=True)
+            return
+        config = execute("SELECT * FROM verification_config WHERE guild_id=$1", (str(interaction.guild_id),), fetch="one")
+        min_age_days = config.get("min_account_age_days", 7) if config else 7
+        account_age = (datetime.datetime.utcnow() - interaction.user.created_at.replace(tzinfo=None)).days
+        if account_age < min_age_days:
+            await interaction.response.send_message(
+                embed=error_embed("Cuenta muy nueva", f"Tu cuenta de Discord debe tener al menos **{min_age_days} días**. La tuya tiene **{account_age} días**."),
+                ephemeral=True
+            )
+            return
+        execute(
+            "UPDATE users SET is_verified=true, updated_at=NOW() WHERE discord_id=$1 AND guild_id=$2",
+            (str(interaction.user.id), str(interaction.guild_id))
+        )
+        execute(
+            """INSERT INTO verification_logs (id, guild_id, discord_id, ign, age, created_at)
+               VALUES ($1,$2,$3,$4,$5,NOW())""",
+            (generate_id(), str(interaction.guild_id), str(interaction.user.id), self.ign.value, self.age.value)
+        )
+        if config and config.get("verified_role_id"):
+            role = interaction.guild.get_role(int(config["verified_role_id"]))
+            if role:
+                try:
+                    await interaction.user.add_roles(role, reason="Verificación aprobada")
+                except Exception:
+                    pass
+        if config and config.get("log_channel_id"):
+            log_channel = interaction.guild.get_channel(int(config["log_channel_id"]))
+            if log_channel:
+                log_e = success_embed(f"✅ {interaction.user.display_name} verificado", f"IGN: **{self.ign.value}** | Edad: **{self.age.value}** | Cuenta: **{account_age} días**")
+                log_e.set_thumbnail(url=interaction.user.display_avatar.url)
+                try:
+                    await log_channel.send(embed=log_e)
+                except Exception:
+                    pass
+        await interaction.response.send_message(embed=success_embed("¡Verificado!", f"Bienvenido, **{self.ign.value}** 🎉"), ephemeral=True)
+
+class VerifyButton(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.button(label="✅ Verificarme", style=discord.ButtonStyle.success, custom_id="verify_button")
+    async def verify(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_modal(VerifyModal())
+
+class Verification(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+
+    verificar = app_commands.Group(name="verificar", description="Sistema de verificación")
+
+    @verificar.command(name="panel", description="Crear el panel de verificación (admin)")
+    @app_commands.describe(titulo="Título del panel", descripcion="Descripción")
+    async def panel(self, interaction: discord.Interaction, titulo: str = "✅ Verificación", descripcion: str = "Haz clic para verificar tu cuenta en el servidor"):
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message(embed=error_embed("Sin permisos", "Necesitas permisos de administrador"), ephemeral=True)
+            return
+        e = info_embed(titulo, descripcion)
+        view = VerifyButton()
+        await interaction.channel.send(embed=e, view=view)
+        await interaction.response.send_message(embed=success_embed("Panel creado", "El panel de verificación fue publicado"), ephemeral=True)
+
+    @verificar.command(name="estado", description="Ver tu estado de verificación")
+    async def estado(self, interaction: discord.Interaction):
+        user = get_or_create_user(str(interaction.user.id), str(interaction.guild_id))
+        if user.get("is_verified"):
+            await interaction.response.send_message(embed=success_embed("Verificado ✅", "Tu cuenta está verificada en este servidor"), ephemeral=True)
+        else:
+            await interaction.response.send_message(embed=error_embed("No verificado", "Tu cuenta aún no está verificada. Usa `/verificar panel` o el panel de verificación."), ephemeral=True)
+
+
+async def setup(bot):
+    await bot.add_cog(Verification(bot))
