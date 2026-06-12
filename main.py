@@ -55,6 +55,12 @@ async def main():
         logger.error("DISCORD_TOKEN not set in environment")
         return
 
+    try:
+        from scripts.init_db import init_db
+        init_db()
+    except Exception as e:
+        logger.warning(f"DB init warning: {e}")
+
     bot = ChicagoBot()
 
     from bot.events import setup_events
