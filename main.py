@@ -1,4 +1,5 @@
 import os
+import re
 import asyncio
 import logging
 import discord
@@ -12,6 +13,38 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 logger = logging.getLogger("bot")
+
+
+def _log_startup_diagnostics():
+    logger.info("=" * 50)
+    logger.info("  CHICAGO SYSTEMS — DIAGNÓSTICO DE ARRANQUE")
+    logger.info("=" * 50)
+
+    db_url = os.environ.get("DATABASE_URL", "")
+    discord_token = os.environ.get("DISCORD_TOKEN", "")
+
+    if db_url:
+        masked = re.sub(r'(:)([^:@/]+)(@)', r'\1***\3', db_url)
+        if "sslmode=" in db_url:
+            m = re.search(r'sslmode=(\w+)', db_url)
+            ssl_note = f"sslmode={m.group(1) if m else '?'} (en URL)"
+        elif any(h in db_url for h in ("localhost", "127.0.0.1")):
+            ssl_note = "sin SSL (host local)"
+        else:
+            ssl_note = "sslmode=require (añadido automáticamente)"
+        logger.info(f"[ENV] DATABASE_URL   : ✅ detectada — {masked}")
+        logger.info(f"[ENV] SSL             : {ssl_note}")
+    else:
+        logger.error("[ENV] DATABASE_URL   : ❌ NO CONFIGURADA — el bot no podrá acceder a la base de datos")
+        logger.error("[ENV] → Agrégala en Secrets de Replit con el nombre exacto: DATABASE_URL")
+
+    if discord_token:
+        logger.info(f"[ENV] DISCORD_TOKEN  : ✅ detectado ({len(discord_token)} chars)")
+    else:
+        logger.error("[ENV] DISCORD_TOKEN  : ❌ NO CONFIGURADO")
+
+    logger.info(f"[ENV] Variables cargadas por proceso: {len(os.environ)} vars de entorno visibles")
+    logger.info("=" * 50)
 
 COGS = [
     "bot.cogs.economy",
@@ -50,16 +83,33 @@ class ChicagoBot(commands.Bot):
                 logger.error(f"Failed to load cog {cog}: {e}")
 
 async def main():
+    _log_startup_diagnostics()
+
     token = os.environ.get("DISCORD_TOKEN")
     if not token:
         logger.error("DISCORD_TOKEN not set in environment")
+        return
+
+    db_url = os.environ.get("DATABASE_URL", "").strip()
+    if not db_url:
+        logger.error("DATABASE_URL no configurada — abortando. Agrégala en Secrets de Replit.")
+        return
+
+    from bot.db import check_connection
+    db_check = check_connection()
+    if db_check["ok"]:
+        logger.info(f"[DB] Conexión verificada ✅ — URL: {db_check['masked_url']} | SSL: {db_check['ssl']}")
+    else:
+        logger.error(f"[DB] Conexión fallida ❌ — {db_check['error']}")
+        logger.error("[DB] El bot no puede arrancar sin base de datos.")
         return
 
     try:
         from scripts.init_db import init_db
         init_db()
     except Exception as e:
-        logger.warning(f"DB init warning: {e}")
+        logger.error(f"[DB] Error inicializando tablas: {e}")
+        return
 
     bot = ChicagoBot()
 

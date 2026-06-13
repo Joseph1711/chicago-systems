@@ -3,9 +3,6 @@ Inicializa todas las tablas de la base de datos para Chicago Systems Bot.
 Ejecutar una sola vez (o cuando se agreguen tablas nuevas).
 """
 import os
-import psycopg2
-
-DATABASE_URL = os.environ.get("DATABASE_URL", "")
 
 SCHEMA = """
 -- =====================
@@ -483,7 +480,11 @@ CREATE TABLE IF NOT EXISTS criminal_missions (
 """
 
 def init_db():
-    conn = psycopg2.connect(DATABASE_URL)
+    from bot.db import get_conn, check_connection
+    result = check_connection()
+    if not result["ok"]:
+        raise RuntimeError(f"No se puede conectar a la base de datos: {result['error']}")
+    conn = get_conn()
     try:
         with conn:
             with conn.cursor() as cur:
